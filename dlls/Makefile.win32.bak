@@ -1,0 +1,15 @@
+OFS = angel.obj a5.obj blazer.obj dm4.obj omen.obj animating.obj animation.obj bmodels.obj bush.obj buttons.obj buy.obj cbase.obj client.obj cocker.obj combat.obj doors.obj effects.obj emag.obj excal.obj explode.obj func_break.obj func_tank.obj game.obj globals.obj h_cycler.obj h_export.obj impulse.obj lights.obj m98.obj mag.obj matrix.obj mortar.obj mpstubb.obj object.obj orracle.obj paintball.obj pathcorner.obj pbgun.obj phantom.obj plane.obj plats.obj player.obj random.obj rules.obj shocker.obj sl68.obj sound.obj soundent.obj spectator.obj spyder.obj studio_util.obj subs.obj timmy.obj triggers.obj util.obj world.obj pm_shared.obj pm_math.obj voice_gamemgr.obj
+CFLAGS = /nologo /O2 /ML /G5 /EHsc /W3 /I "..\dlls" /I "..\engine" /I "..\common" /I "..\pm_shared" /I "..\game_shared" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_WIN32" /D "VALVE_DLL" /D "CLIENT_WEAPONS" /Fp"pb.pch" /YX /FD /c 
+LFLAGS = kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib /nologo /subsystem:windows /dll /incremental:no /pdb:"pb.pdb" /map:"pb.map" /debug /machine:I386  /out:"pb.dll" /implib:"pb.lib" /def:"pb.def"
+pb.dll: pm_shared.c pm_math.c voice_gamemgr.cpp $(OFS)
+	link.exe $(LFLAGS) $(OFS)
+pm_shared.c: ..\pm_shared\pm_shared.c
+	cp ..\pm_shared\pm_shared.c .
+pm_math.c: ..\pm_shared\pm_math.c
+	cp ..\pm_shared\pm_math.c .
+voice_gamemgr.cpp: ..\game_shared\voice_gamemgr.cpp
+	cp ..\game_shared\voice_gamemgr.cpp .
+%.obj: %.cpp
+	cl ${CFLAGS} /c $<
+%.obj: %.c
+	cl ${CFLAGS} /c $<
