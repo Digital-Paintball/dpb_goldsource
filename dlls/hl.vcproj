@@ -23,7 +23,7 @@
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				OptimizeForProcessor="1"
-				AdditionalIncludeDirectories="..\dlls,..\engine,..\common,..\pm_shared,..\game_shared,..\weapons_shared"
+				AdditionalIncludeDirectories="..\dlls;..\engine;..\common;..\game_shared;..\pm_shared;..\"
 				PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;VALVE_DLL"
 				StringPooling="TRUE"
 				RuntimeLibrary="0"
@@ -43,10 +43,10 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="c:\steam\steamapps\omega@frontline2.com\half-life\cleansdk\dlls\hl.dll"
+				OutputFile="d:\steam\steamapps\omega@frontline2.com\dedicated server\dpb\dlls\pb.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
-				ModuleDefinitionFile=".\hl.def"
+				ModuleDefinitionFile=".\pb.def"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\..\INTERMEDIATE\RELEASE_SERVER/hl.pdb"
 				GenerateMapFile="TRUE"

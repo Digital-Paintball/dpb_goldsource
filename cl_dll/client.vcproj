@@ -90,7 +90,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="..\utils\vgui\include,..\engine,..\common,..\pm_shared,..\dlls,..\weapons_shared"
+				AdditionalIncludeDirectories="..\dlls;..\common;..\pm_shared;..\engine;..\utils\vgui\include;..\game_shared;..\weapons_shared"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CLIENT_DLL;CLIENT_WEAPONS"
 				StringPooling="TRUE"
 				RuntimeLibrary="0"
