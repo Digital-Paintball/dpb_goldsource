@@ -3439,7 +3439,8 @@ void PM_FixModelHulls()
    
     // All the BSP models other than the world have names in the format "*%d"  
     // Max # of models (of all types) assumed to be 512  for (model = 0; model < 1024; model++)
-    {  
+	for (model = 0; model < 1024; model++)
+	{  
         if (pmove->physents[0].model[model].name[0] == '*')  
         {
             VectorCopy(POINT_MIN, g_modelarray[model].hulls[WORLD_HULL_POINT].clip_mins);//override point        
