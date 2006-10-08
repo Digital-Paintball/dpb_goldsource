@@ -9,25 +9,13 @@ compiling
 	run cygwin, and then cd to the code's directory (cl_dlls or dlls) and type make. for the server,
 	make -f Makefile.win32 is required. To use the batch files, run build.bat through the
 	Visual Studio .NET 2003 Command Prompt.
+-- Now there are Vs2k3.Net SOlution Files.
+Linux compiling, no clue. you'll probably have to rebuild the makefile for that, for any file changes.
 
 current issues (in order of severity):
 
-	hlds crash on changelevel in internet game with players connected
-		steps to reproduce:
-			launch hlds
-			have people join game
-			changelevel (keep changing the level with the changelevel command
-				until it segfaults)
-
-	prone/stamina system input is broken
-		steps to reproduce:
-			join game
-			hit prone twice
-			prone will prone, then wait for stamina to go full to unprone.
-				the expected behavior is to ignore the second keypress, not store it.
-				also, if you are prone at the end of a round or when shot, you will start
-				the next round with prone queued.
-			
+-- This one i haven't been able to reproduce or see.
+		
 	view models glitch around screen in internet games
 		steps to reproduce:
 			launch game

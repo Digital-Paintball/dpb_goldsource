@@ -7,6 +7,9 @@
 
 #ifndef VGUI_CHECKBUTTON2_H
 #define VGUI_CHECKBUTTON2_H
+#ifdef _WIN32
+#pragma once
+#endif
 
 
 #include "vgui_label.h"

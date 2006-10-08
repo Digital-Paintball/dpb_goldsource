@@ -231,7 +231,7 @@ public:
 };
 
 extern unsigned short g_usPaintball;
-void FirePaintball(float *origin,float *velocity,int owner);
-void RemoveBalls(int owner);
-void RunPaintballs();
+//void FirePaintball(float *origin,float *velocity,int owner);
+//void RemoveBalls(int owner);
+//void RunPaintballs();
 #endif 

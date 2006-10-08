@@ -14,6 +14,9 @@
 ****/
 #ifndef IN_BUTTONS_H
 #define IN_BUTTONS_H
+#ifdef _WIN32
+#pragma once
+#endif
 
 #define IN_ATTACK	(1 << 0)
 #define IN_JUMP		(1 << 1)

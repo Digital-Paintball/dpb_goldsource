@@ -259,12 +259,12 @@ LINK_ENTITY_TO_CLASS( worldspawn, CWorld );
 #define SF_WORLD_FORCETEAM	0x0004		// Force teams
 
 float g_flWeaponCheat; 
-
+extern "C" int g_model_hulls_fixed;
 void CWorld :: Spawn( void )
 {
-		
+	g_model_hulls_fixed = 0; // New map - make sure all the models get fixed again 		
 	Precache( );
-	gRules.Reset();
+	gRules->Reset();
 	g_flWeaponCheat = CVAR_GET_FLOAT( "sv_cheats" );  // Is the impulse 101 command allowed?	
 }
 extern unsigned short g_usPaintball;
@@ -275,6 +275,16 @@ void CWorld :: Precache( void )
 	CVAR_SET_STRING("room_type", "0");// clear DSP
 
 	// Set up game rules
+	if (gRules)
+	{
+		delete gRules;
+	}
+	gRules = new CRules;
+
+	SERVER_COMMAND( "exec game.cfg\n" );
+	SERVER_EXECUTE( );
+
+
 	//!!!UNDONE why is there so much Spawn code in the Precache function? I'll just keep it here 
 
 	///!!!LATER - do we want a sound ent in deathmatch? (sjb)
@@ -302,42 +312,13 @@ void CWorld :: Precache( void )
 // the area based ambient sounds MUST be the first precache_sounds
 
 // player precaches     
-//	g_sModelIndexWExplosion = PRECACHE_MODEL ("sprites/WXplo1.spr");// underwater fireball
 	g_sModelIndexSmoke = PRECACHE_MODEL ("sprites/steam1.spr");// smoke
-//	g_sModelIndexBubbles = PRECACHE_MODEL ("sprites/bubble.spr");//bubbles
-//	g_sModelIndexBloodSpray = PRECACHE_MODEL ("sprites/bloodspray.spr"); // initial blood
 	g_sModelIndexBloodDrop = PRECACHE_MODEL ("sprites/blood.spr"); // splattered blood 
-
-/*	g_sModelIndexLaser = PRECACHE_MODEL( (char *)g_pModelNameLaser );
-	g_sModelIndexLaserDot = PRECACHE_MODEL("sprites/laserdot.spr");								// get weapon precaches
-*/
 	ClientPrecache();
 
 // sounds used from C physics code
 	PRECACHE_SOUND("common/null.wav");				// clears sound channels
 
-/*	PRECACHE_SOUND( "items/suitchargeok1.wav" );//!!! temporary sound for respawning weapons.
-	PRECACHE_SOUND( "items/gunpickup2.wav" );// player picks up a gun.
-*/
-/*	PRECACHE_SOUND( "common/bodydrop3.wav" );// dead bodies hitting the ground (animation events)
-	PRECACHE_SOUND( "common/bodydrop4.wav" );
-*/	
-/*	g_Language = (int)CVAR_GET_FLOAT( "sv_language" );
-	if ( g_Language == LANGUAGE_GERMAN )
-	{
-		PRECACHE_MODEL( "models/germangibs.mdl" );
-	}
-	else
-	{
-		PRECACHE_MODEL( "models/hgibs.mdl" );
-		PRECACHE_MODEL( "models/agibs.mdl" );
-	}
-*/
-/*	PRECACHE_SOUND ("weapons/ric1.wav");
-	PRECACHE_SOUND ("weapons/ric2.wav");
-	PRECACHE_SOUND ("weapons/ric3.wav");
-	PRECACHE_SOUND ("weapons/ric4.wav");
-	PRECACHE_SOUND ("weapons/ric5.wav");*/
 //
 // Setup light animation tables. 'a' is total darkness, 'z' is maxbright.
 //

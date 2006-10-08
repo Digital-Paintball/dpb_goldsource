@@ -27,6 +27,8 @@ extern "C" {
 #endif
 
 #include "const.h"
+#include "archtypes.h"
+#include "Sequence.h"
 
 
 // this file is included by both the engine and the client-dll,
@@ -67,21 +69,6 @@ typedef struct client_sprite_s
 	int iRes;
 	wrect_t rc;
 } client_sprite_t;
-
-typedef struct client_textmessage_s
-{
-	int		effect;
-	byte	r1, g1, b1, a1;		// 2 colors for effects
-	byte	r2, g2, b2, a2;
-	float	x;
-	float	y;
-	float	fadein;
-	float	fadeout;
-	float	holdtime;
-	float	fxtime;
-	const char *pName;
-	const char *pMessage;
-} client_textmessage_t;
 
 typedef struct hud_player_info_s
 {
@@ -196,7 +183,7 @@ typedef struct cl_enginefuncs_s
 	void						( *pfnPlaybackEvent )		( int flags, const struct edict_s *pInvoker, unsigned short eventindex, float delay, float *origin, float *angles, float fparam1, float fparam2, int iparam1, int iparam2, int bparam1, int bparam2 );
 	void						( *pfnWeaponAnim )			( int iAnim, int body );
 	float						( *pfnRandomFloat )			( float flLow, float flHigh );
-	long						( *pfnRandomLong )			( long lLow, long lHigh );
+	int32						( *pfnRandomLong )			( int32 lLow, int32 lHigh );
 	void						( *pfnHookEvent )			( char *name, void ( *pfnEvent )( struct event_args_s *args ) );
 	int							(*Con_IsVisible)			();
 	const char					*( *pfnGetGameDirectory )	( void );

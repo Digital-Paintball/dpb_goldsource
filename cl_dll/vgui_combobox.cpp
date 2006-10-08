@@ -167,7 +167,7 @@ void ComboBox::addItem(char *s)
 {
 	CSchemeManager *pSchemes	= gViewPort->GetSchemeManager();
 	SchemeHandle_t hSmallText	= pSchemes->getSchemeHandle( "Briefing Text" );
-	int x,y;
+	int x;//,y;
 	m_Scroll->setScrollBarVisible(false,true);
 	x=getWide();//m_Scroll->getClientClip()->getWide()-16;
 	ComboItem *b=new ComboItem(s,0,COMBO_ITEM_TALL*m_iItems,x,COMBO_ITEM_TALL);

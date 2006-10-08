@@ -27,6 +27,8 @@ extern BEAM *pBeam;
 extern BEAM *pBeam2;
 
 /// USER-DEFINED SERVER MESSAGE HANDLERS
+extern "C" int g_model_hulls_fixed;
+extern void ResetProne(); //Tony; Turn prone off just incase it's on.
 
 int CHud :: MsgFunc_ResetHUD(const char *pszName, int iSize, void *pbuf )
 {
@@ -48,6 +50,10 @@ int CHud :: MsgFunc_ResetHUD(const char *pszName, int iSize, void *pbuf )
 	// reset concussion effect
 	m_iConcussionEffect = 0;
 
+	//rescale stuff
+    g_model_hulls_fixed = 0;
+
+	ResetProne();
 	return 1;
 }
 
@@ -66,6 +72,10 @@ void CHud :: MsgFunc_InitHUD( const char *pszName, int iSize, void *pbuf )
 
 }
 
+void CHud::MsgFunc_NewRound( const char *pszName, int iSize, void *pbuf )
+{
+	ResetProne(); //Tony; Ownerage. anything else we need to do on a round reset?!?
+}
 
 
 int CHud :: MsgFunc_Damage(const char *pszName, int iSize, void *pbuf )

@@ -103,6 +103,12 @@ int __MsgFunc_InitHUD(const char *pszName, int iSize, void *pbuf)
 	return 1;
 }
 
+int __MsgFunc_NewRound(const char *pszName, int iSize, void *pbuf)
+{
+	gHUD.MsgFunc_NewRound( pszName, iSize, pbuf );
+	return 1;
+}
+
 int __MsgFunc_SetFOV(const char *pszName, int iSize, void *pbuf)
 {
 	return gHUD.MsgFunc_SetFOV( pszName, iSize, pbuf );
@@ -264,6 +270,7 @@ void CHud :: Init( void )
 	HOOK_MESSAGE( Logo );
 	HOOK_MESSAGE( ResetHUD );
 	HOOK_MESSAGE( InitHUD );
+	HOOK_MESSAGE( NewRound );
 	HOOK_MESSAGE( SetFOV );
 	HOOK_MESSAGE( Concuss );
 

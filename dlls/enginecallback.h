@@ -70,8 +70,9 @@ extern enginefuncs_t g_engfuncs;
 #define RANDOM_LONG		(*g_engfuncs.pfnRandomLong)
 #define RANDOM_FLOAT	(*g_engfuncs.pfnRandomFloat)
 #define GETPLAYERAUTHID	(*g_engfuncs.pfnGetPlayerAuthId)
-
+#define ALERT			(*g_engfuncs.pfnAlertMessage)
 inline void MESSAGE_BEGIN( int msg_dest, int msg_type, const float *pOrigin = NULL, edict_t *ed = NULL ) {
+//	ALERT(at_console, "%i %i\n", msg_dest, msg_type);
 	(*g_engfuncs.pfnMessageBegin)(msg_dest, msg_type, pOrigin, ed);
 }
 #define MESSAGE_END		(*g_engfuncs.pfnMessageEnd)
@@ -89,7 +90,6 @@ inline void MESSAGE_BEGIN( int msg_dest, int msg_type, const float *pOrigin = NU
 #define CVAR_SET_FLOAT	(*g_engfuncs.pfnCVarSetFloat)
 #define CVAR_SET_STRING	(*g_engfuncs.pfnCVarSetString)
 #define CVAR_GET_POINTER (*g_engfuncs.pfnCVarGetPointer)
-#define ALERT			(*g_engfuncs.pfnAlertMessage)
 #define ENGINE_FPRINTF	(*g_engfuncs.pfnEngineFprintf)
 #define ALLOC_PRIVATE	(*g_engfuncs.pfnPvAllocEntPrivateData)
 inline void *GET_PRIVATE( edict_t *pent )
@@ -108,7 +108,12 @@ inline void *GET_PRIVATE( edict_t *pent )
 #define FIND_CLIENT_IN_PVS			(*g_engfuncs.pfnFindClientInPVS)
 #define EMIT_AMBIENT_SOUND			(*g_engfuncs.pfnEmitAmbientSound)
 #define GET_MODEL_PTR				(*g_engfuncs.pfnGetModelPtr)
-#define REG_USER_MSG				(*g_engfuncs.pfnRegUserMsg)
+//#define REG_USER_MSG				(*g_engfuncs.pfnRegUserMsg)
+inline int REG_USER_MSG(const char *pszName, int iSize) {
+	int msgIdx = (*g_engfuncs.pfnRegUserMsg)(pszName, iSize);
+//	ALERT(at_console, "Message: %s id: %i\n", pszName, msgIdx);
+	return msgIdx;
+}
 #define GET_BONE_POSITION			(*g_engfuncs.pfnGetBonePosition)
 #define FUNCTION_FROM_NAME			(*g_engfuncs.pfnFunctionFromName)
 #define NAME_FOR_FUNCTION			(*g_engfuncs.pfnNameForFunction)

@@ -38,6 +38,8 @@
 #include "netadr.h"
 #include "rules.h"
 #include"pm_shared.h"
+
+#include "paintballs.h"
 extern DLL_GLOBAL ULONG		g_ulModelIndexPlayer;
 
 
@@ -91,11 +93,23 @@ GLOBALS ASSUMED SET:  g_fGameOver
 */
 void ClientDisconnect( edict_t *pEntity )
 {
-	if (gRules.GameOver)
+	if (gRules->GameOver)
 		return;
+
+	UTIL_ClientPrintAll(HUD_PRINTTALK,UTIL_VarArgs("\xf0* %s has left the game\n",STRING(pEntity->v.netname)));
+
+	UTIL_LogPrintf( "\"%s<%i><%s><%i>\" disconnected\n",  
+	STRING( pEntity->v.netname ), 
+	GETPLAYERUSERID(pEntity),
+	GETPLAYERAUTHID(pEntity),
+	pEntity->v.team);
+
 	CBasePlayer *plr;
 	int dex=ENTINDEX(pEntity);
-	for(int i=1;i<=gpGlobals->maxClients;i++)//((client=(CBasePlayer*)UTIL_FindEntityByClassname(NULL,"player"))&&!FNullEnt(client->edict()))
+	gBallManager.RemoveBalls(dex); //un-needed..
+
+	//if we're being spectated, stop any spectators from being locked onto us.
+	for(int i=1;i<=gpGlobals->maxClients;i++)
 	{
 		plr=(CBasePlayer *)UTIL_PlayerByIndex(i);
 		if(!plr||plr->entindex()==dex)
@@ -111,14 +125,28 @@ void ClientDisconnect( edict_t *pEntity )
 			}
 		}
 	}
+
+	// since the edict doesn't get deleted, fix it so it doesn't interfere.
 	pEntity->v.takedamage = DAMAGE_NO;// don't attract autoaim
-	pEntity->v.solid = SOLID_NOT;// nonsolid
-	pEntity->v.effects = EF_NODRAW;
-	pEntity->v.health = 0;
-	pEntity->v.team=0;
-	pEntity->v.deadflag=DEAD_DEAD;
-	RemoveBalls(dex);
-	if(!gRules.m_bPrestart) {
+	pEntity->v.solid	= SOLID_NOT;// nonsolid
+	pEntity->v.effects	= EF_NODRAW;
+	pEntity->v.health	= 0;
+	pEntity->v.team		= 0;
+	pEntity->v.deadflag	= DEAD_DEAD;
+
+	UTIL_SetOrigin ( &pEntity->v, pEntity->v.origin );
+	CBasePlayer *pPlayer = (CBasePlayer *)CBaseEntity::Instance(pEntity);
+	if(pPlayer)
+		pPlayer->RemoveAllItems();
+
+	CSound *pSound;
+	pSound = CSoundEnt::SoundPointerForIndex( CSoundEnt::ClientSoundIndex( pEntity ) );
+	if ( pSound )
+		pSound->Reset();
+
+	//check if disconnecting is going to cause a win.
+	if(!gRules->m_bPrestart) 
+	{
 		edict_t *e;
 		int numred=0,numblue=0;
 		for(int i=1;i<=gpGlobals->maxClients;i++)
@@ -128,34 +156,19 @@ void ClientDisconnect( edict_t *pEntity )
 			e=INDEXENT(i);
 			if((!e)||e->free)
 				continue;
-			if(e->v.team==TEAM_BLUE && !e->v.deadflag)
+			if( e->v.team == TEAM_BLUE && !e->v.deadflag)
 				numblue++;
-			else if(e->v.team==TEAM_RED && !e->v.deadflag)
+			else if( e->v.team == TEAM_RED && !e->v.deadflag)
 				numred++;
 		}
-		if(!numred&&!numblue)
-			gRules.EndRound(WIN_DRAW);
-		else if(!numred)
-			gRules.EndRound(WIN_BLUE);
-		else if(!numblue)
-			gRules.EndRound(WIN_RED);
+		//Tony; sorry, i changed this. the other crap was ugly.
+		if (numred>numblue)
+			gRules->EndRound(WIN_RED);
+		else if (numblue>numred)
+			gRules->EndRound(WIN_BLUE);
+		else
+			gRules->EndRound(WIN_DRAW);
 	}
-	UTIL_ClientPrintAll(HUD_PRINTTALK,UTIL_VarArgs("\xf0* %s has left the game\n",STRING(pEntity->v.netname)));
-	CSound *pSound;
-	pSound = CSoundEnt::SoundPointerForIndex( CSoundEnt::ClientSoundIndex( pEntity ) );
-	if ( pSound )
-		pSound->Reset();
-
-// since the edict doesn't get deleted, fix it so it doesn't interfere.
-	UTIL_SetOrigin ( &pEntity->v, pEntity->v.origin );
-	UTIL_LogPrintf( "\"%s<%i><%s><%i>\" disconnected\n",  
-	STRING( pEntity->v.netname ), 
-	GETPLAYERUSERID(pEntity),
-	GETPLAYERAUTHID(pEntity),
-	pEntity->v.team);
-	CBasePlayer *pPlayer = (CBasePlayer *)CBaseEntity::Instance(pEntity);
-	if(pPlayer)
-		pPlayer->RemoveAllItems();
 }
 
 
@@ -194,7 +207,7 @@ void ClientKill( edict_t *pEntity )
 
 	CBasePlayer *pl = (CBasePlayer*) CBasePlayer::Instance( pev );
 
-	if ((!gRules.m_RoundState)||gRules.m_bPrestart|| pl->m_fNextSuicideTime > gpGlobals->time||pev->deadflag )
+	if ((!gRules->m_RoundState) || gRules->m_bPrestart || pl->m_fNextSuicideTime > gpGlobals->time || pev->deadflag )
 		return;  // prevent suiciding too ofter
 
 	pl->m_fNextSuicideTime = gpGlobals->time + 1;  // don't let them suicide for 5 seconds after suiciding
@@ -220,20 +233,19 @@ void ClientPutInServer( edict_t *pEntity )
 	CBasePlayer *pPlayer;
 
 	entvars_t *pev = &pEntity->v;
-	RemoveBalls(ENTINDEX(pEntity));
+	gBallManager.RemoveBalls(ENTINDEX(pEntity)); //unneccesary now. but, leaving it anyway.
+
 	pPlayer = GetClassPtr((CBasePlayer *)pev);
 	pPlayer->SetCustomDecalFrames(-1); // Assume none;
-	pPlayer->m_fDeployed=0;
-	pPlayer->m_weapon=NULL;
 	// Allocate a CBasePlayer for pev, and call spawn
 	pPlayer->Spawn() ;
-	pPlayer->pev->effects|=EF_NODRAW;
-	pPlayer->pev->deadflag=DEAD_DEAD;
-	pPlayer->pev->health=0;
-	pPlayer->pev->team=0;
-	pPlayer->pev->solid=SOLID_NOT;
-	pPlayer->pev->takedamage=DAMAGE_NO;
-	pPlayer->m_fGameHUDInitialized=0;
+	pPlayer->pev->effects |= EF_NODRAW;
+	pPlayer->pev->deadflag	=	DEAD_DEAD;
+	pPlayer->pev->health	=	0;
+	pPlayer->pev->team	=	0;
+	pPlayer->pev->solid = SOLID_NOT;
+	pPlayer->pev->takedamage	=	DAMAGE_NO;
+	pPlayer->m_fGameHUDInitialized	=	0;
 	// Reset interpolation during first frame
 	pPlayer->pev->effects |= EF_NOINTERP;
 }
@@ -409,24 +421,6 @@ void ClientCommand( edict_t *pEntity )
 	{
 		plr->pev->body=atoi(CMD_ARGV(1));
 	}
-/*	else if (((pstr = strstr(pcmd, "weapon_")) != NULL)  && (pstr == pcmd))
-	{
-		plr->SelectItem(pcmd);
-	}*/
-/*	else if (FStrEq(pcmd, "lastinv" ))
-	{
-		plr->SelectLastItem();
-	}*/
-/*	else if(FStrEq(pcmd,"bset"))
-	{
-		char *a1=(char*)CMD_ARGV(1),*a2=(char*)CMD_ARGV(2);
-		if(!a1||!a2)
-			return;
-		int cont=atoi(a1);
-		float val=atof(a2);
-		GetClassPtr((CBasePlayer *)pev)->SetBoneController(cont,val);
-		ClientPrint(pev,HUD_PRINTCONSOLE,UTIL_VarArgs("Contorller: %i, value: %f\n",cont,val));
-	}*/
 	else if(FStrEq(pcmd+1,"slide"))
 	{
 		if(pcmd[0]=='+')
@@ -435,7 +429,7 @@ void ClientCommand( edict_t *pEntity )
 			pEntity->v.friction=1.0;
 
 	}
-	else if((!gRules.ClientCommand(plr, pcmd))&&(!g_VoiceGameMgr.ClientCommand(GetClassPtr((CBasePlayer *)pev), pcmd)))
+	else if((!gRules->ClientCommand(plr, pcmd))&&(!g_VoiceGameMgr.ClientCommand(GetClassPtr((CBasePlayer *)pev), pcmd)))
 	{
 		// tell the user they entered an unknown command
 		char command[128];
@@ -465,14 +459,15 @@ void ClientUserInfoChanged( edict_t *pEntity, char *infobuffer )
 	// Is the client spawned yet?
 	if ( !pEntity->pvPrivateData )
 		return;
-	CBasePlayer *pPlayer=(CBasePlayer*)GET_PRIVATE(pEntity);
-	if(!pPlayer)
-		return;
+//	CBasePlayer *pPlayer=(CBasePlayer*)GET_PRIVATE(pEntity);
+//	if(!pPlayer)
+//		return;
 /*	if(strcmp(g_engfuncs.pfnInfoKeyValue( infobuffer, "model" ),"player"))
 	 &&strcmp(g_engfuncs.pfnInfoKeyValue( infobuffer, "model" ),"player2"))
 		g_engfuncs.pfnSetClientKeyValue(ENTINDEX(pEntity), g_engfuncs.pfnGetInfoKeyBuffer(pEntity), "model","player1");*/
 	// msg everyone if someone changes their name,  and it isn't the first time (changing no name to current name)
 	if ( pEntity->v.netname && STRING(pEntity->v.netname)[0]&& strcmp( STRING(pEntity->v.netname), g_engfuncs.pfnInfoKeyValue( infobuffer, "name" )) )
+//	if ( pEntity->v.netname && STRING(pEntity->v.netname)[0] != 0 && !FStrEq( STRING(pEntity->v.netname), g_engfuncs.pfnInfoKeyValue( infobuffer, "name" )) )
 	{
 		char sName[256];
 		char *pName = g_engfuncs.pfnInfoKeyValue( infobuffer, "name" );
@@ -603,8 +598,8 @@ void ParmsChangeLevel( void )
 //
 void StartFrame( void )
 {
-	RunPaintballs();
-	gRules.Frame();
+	gBallManager.RunPaintballs();
+	gRules->Frame();
 }
 
 
@@ -613,21 +608,11 @@ void ClientPrecache( void )
 	// setup precaches always needed
 	PRECACHE_SOUND("player/sprayer.wav");			// spray paint sound for PreAlpha
 	
-	// PRECACHE_SOUND("player/pl_jumpland2.wav");		// UNDONE: play 2x step sound
-	
-/*	PRECACHE_SOUND("player/pl_fallpain2.wav");		
-	PRECACHE_SOUND("player/pl_fallpain3.wav");*/		
-	
 	PRECACHE_SOUND("player/pl_step1.wav");		// walk on concrete
 	PRECACHE_SOUND("player/pl_step2.wav");
 	PRECACHE_SOUND("player/pl_step3.wav");
 	PRECACHE_SOUND("player/pl_step4.wav");
 
-/*	PRECACHE_SOUND("common/npc_step1.wav");		// NPC walk on concrete
-	PRECACHE_SOUND("common/npc_step2.wav");
-	PRECACHE_SOUND("common/npc_step3.wav");
-	PRECACHE_SOUND("common/npc_step4.wav");
-*/ 
 	PRECACHE_SOUND("player/pl_metal1.wav");		// walk on metal
 	PRECACHE_SOUND("player/pl_metal2.wav");
 	PRECACHE_SOUND("player/pl_metal3.wav");
@@ -674,44 +659,10 @@ void ClientPrecache( void )
 	PRECACHE_SOUND("player/pl_wade3.wav");
 	PRECACHE_SOUND("player/pl_wade4.wav");
 
-/*	PRECACHE_SOUND("debris/wood1.wav");			// hit wood texture
-	PRECACHE_SOUND("debris/wood2.wav");
-	PRECACHE_SOUND("debris/wood3.wav");
-
-	PRECACHE_SOUND("plats/train_use1.wav");		// use a train
-*/
-	/*PRECACHE_SOUND("buttons/spark5.wav");		// hit computer texture
-	PRECACHE_SOUND("buttons/spark6.wav");
-	PRECACHE_SOUND("debris/glass1.wav");
-	PRECACHE_SOUND("debris/glass2.wav");
-	PRECACHE_SOUND("debris/glass3.wav");
-*/
-/*	PRECACHE_SOUND( SOUND_FLASHLIGHT_ON );
-	PRECACHE_SOUND( SOUND_FLASHLIGHT_OFF );
-*/
 
 
 	PRECACHE_MODEL("models/player.mdl");
 	PRECACHE_MODEL("models/smallplayer.mdl");
-
-	// hud sounds
-
-/*	PRECACHE_SOUND("common/wpn_hudoff.wav");
-	PRECACHE_SOUND("common/wpn_hudon.wav");
-	PRECACHE_SOUND("common/wpn_moveselect.wav");
-	PRECACHE_SOUND("common/wpn_select.wav");
-	PRECACHE_SOUND("common/wpn_denyselect.wav");
-*/
-
-	// geiger sounds
-
-/*	PRECACHE_SOUND("player/geiger6.wav");
-	PRECACHE_SOUND("player/geiger5.wav");
-	PRECACHE_SOUND("player/geiger4.wav");
-	PRECACHE_SOUND("player/geiger3.wav");
-	PRECACHE_SOUND("player/geiger2.wav");
-	PRECACHE_SOUND("player/geiger1.wav");
-*/
 
 }
 
@@ -1075,8 +1026,8 @@ int AddToFullPack( struct entity_state_s *state, int e, edict_t *ent, edict_t *h
 		else
 			state->usehull=0;
 		
-		state->health		= ent->v.health;
-		state->iuser4		=ent->v.iuser4;
+		state->health		= 	ent->v.health;
+		state->iuser4		=	ent->v.iuser4;
 	}
 
 	return 1;
@@ -1397,63 +1348,6 @@ int GetWeaponData( struct edict_s *player, struct weapon_data_s *info )
 	memset( info, 0, 32 * sizeof( weapon_data_t ) );
 	return 1;
 }
-/*	int i;
-	weapon_data_t *item;
-	entvars_t *pev = &player->v;
-	
-	
-	ItemInfo II;
-
-	memset( info, 0, 32 * sizeof( weapon_data_t ) );
-
-	if ( !pl )
-		return 1;
-
-	// go through all of the weapons and make a list of the ones to pack
-	for ( i = 0 ; i < MAX_ITEM_TYPES ; i++ )
-	{
-		if ( pl->m_rgpPlayerItems[ i ] )
-		{
-			// there's a weapon here. Should I pack it?
-			CBasePlayerItem *pPlayerItem = pl->m_rgpPlayerItems[ i ];
-
-			while ( pPlayerItem )
-			{
-				gun = (CBasePlayerWeapon *)pPlayerItem->GetWeaponPtr();
-				if ( gun && gun->UseDecrement() )
-				{
-					// Get The ID.
-					memset( &II, 0, sizeof( II ) );
-					gun->GetItemInfo( &II );
-
-					if ( II.iId >= 0 && II.iId < 32 )
-					{
-						item = &info[ II.iId ];
-					 	
-						item->m_iId						= II.iId;
-						item->m_iClip					= gun->m_iClip;
-
-						item->m_flTimeWeaponIdle		= max( gun->m_flTimeWeaponIdle, -0.001 );
-						item->m_flNextPrimaryAttack		= max( gun->m_flNextPrimaryAttack, -0.001 );
-						item->m_flNextSecondaryAttack	= max( gun->m_flNextSecondaryAttack, -0.001 );
-						item->m_fInReload				= gun->m_fInReload;
-						item->m_fInSpecialReload		= gun->m_fInSpecialReload;
-						item->fuser1					= max( gun->pev->fuser1, -0.001 );
-						item->fuser2					= gun->m_flStartThrow;
-						item->fuser3					= gun->m_flReleaseThrow;
-						item->iuser1					= gun->m_chargeReady;
-						item->iuser2					= gun->m_fInAttack;
-						item->iuser3					= gun->m_fireState;
-						
-											
-//						item->m_flPumpTime				= max( gun->m_flPumpTime, -0.001 );
-					}
-				}
-				pPlayerItem = pPlayerItem->m_pNext;
-			}
-		}
-	}
-
 
 /*
 =================

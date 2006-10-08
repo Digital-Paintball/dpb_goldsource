@@ -14,6 +14,9 @@
 ****/
 #ifndef PROGDEFS_H
 #define PROGDEFS_H
+#ifdef _WIN32
+#pragma once
+#endif
 
 typedef struct
 {	

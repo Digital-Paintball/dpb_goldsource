@@ -7,6 +7,9 @@
 
 #ifndef VOICE_COMMON_H
 #define VOICE_COMMON_H
+#ifdef _WIN32
+#pragma once
+#endif
 
 
 #include "bitvec.h"

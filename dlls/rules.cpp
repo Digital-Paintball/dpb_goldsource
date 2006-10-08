@@ -10,10 +10,14 @@
 #include"buy.h"
 #include"pm_shared.h"
 #include"hltv.h"
+
+CRules *gRules; //Tony; our NEW "global" rule object
+#include "paintballs.h"
+
 #define TEAM_NAME(x) ( x == 0 ? "SPECTATOR" : ( x==1 ? "RED" : "BLUE" ) )
 CVoiceGameMgr	g_VoiceGameMgr;
-extern int gmsgCredits,gmsgTeamScore,gmsgCurMarker,gmsgTimer,gmsgServerName,gmsgDeath,gmsgMOTD,gmsgShowMenu,gmsgScoreInfo,gmsgRespawn;
-CRules gRules;
+extern int gmsgCredits,gmsgTeamScore,gmsgCurMarker,gmsgTimer,gmsgServerName,gmsgDeath,gmsgMOTD,gmsgShowMenu,gmsgScoreInfo,gmsgRespawn, gmsgNewRound;
+
 CDpbVoice gVoice;
 void InitializeTransitions();
 bool CDpbVoice::CanPlayerHearPlayer(CBasePlayer *pListener,CBasePlayer *pTalker)
@@ -28,18 +32,18 @@ bool CDpbVoice::CanPlayerHearPlayer(CBasePlayer *pListener,CBasePlayer *pTalker)
 extern int gmsgTextMsg;
 void CRules::Reset()
 {
-	RemoveBalls(0);
+	gBallManager.RemoveBalls(-1); //get rid of all ballz0rs
 	m_RFlag=0;
 	m_BFlag=0;
 	m_CFlag=0;
 	red=0;
 	blue=0;
-	m_iRedScore=0;
-	m_iBlueScore=0;
-	m_iRounds=0;
-	GameOver=0;
-	m_iSpawns=0;
-	m_bPrestart=1;
+	m_iRedScore		=	0;
+	m_iBlueScore	=	0;
+	m_iRounds		=	0;
+	GameOver		=	0;
+	m_iSpawns		=	0;
+	m_bPrestart		=	1;
 	m_RoundState=ROUND_ACTIVE;
 	m_flIntermissionEndTime=0;
 	InitializeTransitions();
@@ -76,21 +80,22 @@ void CRules::Reset()
 
 
 }
-void CRules::CheckWeaponConfig(CBasePlayer *plr,int primary,int barrel,int pods,int color,int jersey,int mask) {
-	if(primary < 0 || primary>=WEAPON_MAX)
+void CRules::CheckWeaponConfig(CBasePlayer *plr, int primary,int barrel,int pods,int color,int jersey,int mask) 
+{
+	if( primary < 0 || primary>=WEAPON_MAX )
 		return;
-	if(barrel < 0 || barrel >= BARREL_MAX)
+	if( barrel < 0 || barrel >= BARREL_MAX )
 		return;
-	if(pods<0 || pods >MAX_PODS )
+	if( pods<0 || pods >MAX_PODS )
 		return;
-	if(gWeapons[primary].cost+gBarrels[barrel].cost+pods*COST_POD > plr->credits)
+	if( gWeapons[primary].cost + gBarrels[barrel].cost + pods * COST_POD > plr->credits)
 		return;
-  if(color<0||color>6||jersey<0||jersey>=JERSEY_MAX||mask<0||mask>=MASK_MAX)
-    return;
-	plr->ConfigWeapons(primary,barrel,pods,color,jersey,mask);
-	if((!plr->IsSpectator())&&(m_bPrestart || m_RoundState==ROUND_FREEZE||!plr->m_fDeployed))
+	if(color<0 || color>6 || jersey<0 || jersey>=JERSEY_MAX || mask<0 || mask >= MASK_MAX )
+		return;
+	plr->ConfigWeapons( primary, barrel, pods, color, jersey, mask );
+	if( ( !plr->IsSpectator() ) && ( m_bPrestart || m_RoundState==ROUND_FREEZE || !plr->m_fDeployed ) )
 		plr->ExecConfig();
-	
+
 
 }
 BOOL CRules::ClientCommand(CBasePlayer *plr,const char *cmd)
@@ -100,6 +105,7 @@ BOOL CRules::ClientCommand(CBasePlayer *plr,const char *cmd)
 		if(CMD_ARGC()!=2)
 			return TRUE;
 		int slot = atoi( CMD_ARGV(1) );
+
 		if(plr->m_Menu==MENU_TEAM)
 		{
 			if(slot==10)
@@ -143,7 +149,8 @@ BOOL CRules::ClientCommand(CBasePlayer *plr,const char *cmd)
 				t=1;
 		}
 		ChangeTeam(plr,t);
-		if(plr->m_fSendWeaponMenu&&t!=0) {
+		if( plr->m_fSendWeaponMenu && t!=0 ) 
+		{
 			plr->m_fSendWeaponMenu=0;
 			UTIL_ShowVgui(plr->pev,30);
 		}
@@ -180,11 +187,19 @@ BOOL CRules::ClientCommand(CBasePlayer *plr,const char *cmd)
 			plr->Spectator_SetMode(atoi(CMD_ARGV(1)));
 		return TRUE;
 	}
-	else if(!strcmp(cmd,"weaponconfig")) {
+	else if(!strcmp(cmd, "weaponconfig")) 
+	{
 		int i=CMD_ARGC();
 		if(i!=7) 
 			return TRUE;
-		CheckWeaponConfig(plr,atoi(CMD_ARGV(1)),atoi(CMD_ARGV(2)),atoi(CMD_ARGV(3)),atoi(CMD_ARGV(4)),atoi(CMD_ARGV(5)),atoi(CMD_ARGV(6)));
+
+		CheckWeaponConfig( plr, 
+			atoi(CMD_ARGV(1)), 
+			atoi(CMD_ARGV(2)), 
+			atoi(CMD_ARGV(3)), 
+			atoi(CMD_ARGV(4)), 
+			atoi(CMD_ARGV(5)), 
+			atoi(CMD_ARGV(6)));
 		return TRUE;
 	}
 	else {
@@ -243,33 +258,488 @@ void CRules::Intermission()
 	m_flIntermissionEndTime=gpGlobals->time+mp_chattime.value;
 	GameOver=1;
 }
+//BEGIN Tony; merge from sdk 2.2
+
+#define MAX_RULE_BUFFER 1024
+
+typedef struct mapcycle_item_s
+{
+	struct mapcycle_item_s *next;
+
+	char mapname[ 32 ];
+	int  minplayers, maxplayers;
+	char rulebuffer[ MAX_RULE_BUFFER ];
+} mapcycle_item_t;
+
+typedef struct mapcycle_s
+{
+	struct mapcycle_item_s *items;
+	struct mapcycle_item_s *next_item;
+} mapcycle_t;
+
+/*
+==============
+DestroyMapCycle
+
+Clean up memory used by mapcycle when switching it
+==============
+*/
+void DestroyMapCycle( mapcycle_t *cycle )
+{
+	mapcycle_item_t *p, *n, *start;
+	p = cycle->items;
+	if ( p )
+	{
+		start = p;
+		p = p->next;
+		while ( p != start )
+		{
+			n = p->next;
+			delete p;
+			p = n;
+		}
+		
+		delete cycle->items;
+	}
+	cycle->items = NULL;
+	cycle->next_item = NULL;
+}
+
+static char com_token[ 1500 ];
+
+/*
+==============
+COM_Parse
+
+Parse a token out of a string
+==============
+*/
+char *COM_Parse (char *data)
+{
+	int             c;
+	int             len;
+	
+	len = 0;
+	com_token[0] = 0;
+	
+	if (!data)
+		return NULL;
+		
+// skip whitespace
+skipwhite:
+	while ( (c = *data) <= ' ')
+	{
+		if (c == 0)
+			return NULL;                    // end of file;
+		data++;
+	}
+	
+// skip // comments
+	if (c=='/' && data[1] == '/')
+	{
+		while (*data && *data != '\n')
+			data++;
+		goto skipwhite;
+	}
+	
+
+// handle quoted strings specially
+	if (c == '\"')
+	{
+		data++;
+		while (1)
+		{
+			c = *data++;
+			if (c=='\"' || !c)
+			{
+				com_token[len] = 0;
+				return data;
+			}
+			com_token[len] = c;
+			len++;
+		}
+	}
+
+// parse single characters
+	if (c=='{' || c=='}'|| c==')'|| c=='(' || c=='\'' || c == ',' )
+	{
+		com_token[len] = c;
+		len++;
+		com_token[len] = 0;
+		return data+1;
+	}
+
+// parse a regular word
+	do
+	{
+		com_token[len] = c;
+		data++;
+		len++;
+		c = *data;
+	if (c=='{' || c=='}'|| c==')'|| c=='(' || c=='\'' || c == ',' )
+			break;
+	} while (c>32);
+	
+	com_token[len] = 0;
+	return data;
+}
+
+/*
+==============
+COM_TokenWaiting
+
+Returns 1 if additional data is waiting to be processed on this line
+==============
+*/
+int COM_TokenWaiting( char *buffer )
+{
+	char *p;
+
+	p = buffer;
+	while ( *p && *p!='\n')
+	{
+		if ( !isspace( *p ) || isalnum( *p ) )
+			return 1;
+
+		p++;
+	}
+
+	return 0;
+}
+
+
+
+/*
+==============
+ReloadMapCycleFile
+
+
+Parses mapcycle.txt file into mapcycle_t structure
+==============
+*/
+int ReloadMapCycleFile( char *filename, mapcycle_t *cycle )
+{
+	char szBuffer[ MAX_RULE_BUFFER ];
+	char szMap[ 32 ];
+	int length;
+	char *pFileList;
+	char *aFileList = pFileList = (char*)LOAD_FILE_FOR_ME( filename, &length );
+	int hasbuffer;
+	mapcycle_item_s *item, *newlist = NULL, *next;
+
+	if ( pFileList && length )
+	{
+		// the first map name in the file becomes the default
+		while ( 1 )
+		{
+			hasbuffer = 0;
+			memset( szBuffer, 0, MAX_RULE_BUFFER );
+
+			pFileList = COM_Parse( pFileList );
+			if ( strlen( com_token ) <= 0 )
+				break;
+
+			strcpy( szMap, com_token );
+
+			// Any more tokens on this line?
+			if ( COM_TokenWaiting( pFileList ) )
+			{
+				pFileList = COM_Parse( pFileList );
+				if ( strlen( com_token ) > 0 )
+				{
+					hasbuffer = 1;
+					strcpy( szBuffer, com_token );
+				}
+			}
+
+			// Check map
+			if ( IS_MAP_VALID( szMap ) )
+			{
+				// Create entry
+				char *s;
+
+				item = new mapcycle_item_s;
+
+				strcpy( item->mapname, szMap );
+
+				item->minplayers = 0;
+				item->maxplayers = 0;
+
+				memset( item->rulebuffer, 0, MAX_RULE_BUFFER );
+
+				if ( hasbuffer )
+				{
+					s = g_engfuncs.pfnInfoKeyValue( szBuffer, "minplayers" );
+					if ( s && s[0] )
+					{
+						item->minplayers = atoi( s );
+						item->minplayers = max( item->minplayers, 0 );
+						item->minplayers = min( item->minplayers, gpGlobals->maxClients );
+					}
+					s = g_engfuncs.pfnInfoKeyValue( szBuffer, "maxplayers" );
+					if ( s && s[0] )
+					{
+						item->maxplayers = atoi( s );
+						item->maxplayers = max( item->maxplayers, 0 );
+						item->maxplayers = min( item->maxplayers, gpGlobals->maxClients );
+					}
+
+					// Remove keys
+					//
+					g_engfuncs.pfnInfo_RemoveKey( szBuffer, "minplayers" );
+					g_engfuncs.pfnInfo_RemoveKey( szBuffer, "maxplayers" );
+
+					strcpy( item->rulebuffer, szBuffer );
+				}
+
+				item->next = cycle->items;
+				cycle->items = item;
+			}
+			else
+			{
+				ALERT( at_console, "Skipping %s from mapcycle, not a valid map\n", szMap );
+			}
+
+		}
+
+		FREE_FILE( aFileList );
+	}
+
+	// Fixup circular list pointer
+	item = cycle->items;
+
+	// Reverse it to get original order
+	while ( item )
+	{
+		next = item->next;
+		item->next = newlist;
+		newlist = item;
+		item = next;
+	}
+	cycle->items = newlist;
+	item = cycle->items;
+
+	// Didn't parse anything
+	if ( !item )
+	{
+		return 0;
+	}
+
+	while ( item->next )
+	{
+		item = item->next;
+	}
+	item->next = cycle->items;
+	
+	cycle->next_item = item->next;
+
+	return 1;
+}
+
+/*
+==============
+CountPlayers
+
+Determine the current # of active players on the server for map cycling logic
+==============
+*/
+int CountPlayers( void )
+{
+	int	num = 0;
+
+	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
+	{
+		CBaseEntity *pEnt = UTIL_PlayerByIndex( i );
+
+		if ( pEnt )
+		{
+			num = num + 1;
+		}
+	}
+
+	return num;
+}
+
+/*
+==============
+ExtractCommandString
+
+Parse commands/key value pairs to issue right after map xxx command is issued on server
+ level transition
+==============
+*/
+void ExtractCommandString( char *s, char *szCommand )
+{
+	// Now make rules happen
+	char	pkey[512];
+	char	value[512];	// use two buffers so compares
+								// work without stomping on each other
+	char	*o;
+	
+	if ( *s == '\\' )
+		s++;
+
+	while (1)
+	{
+		o = pkey;
+		while ( *s != '\\' )
+		{
+			if ( !*s )
+				return;
+			*o++ = *s++;
+		}
+		*o = 0;
+		s++;
+
+		o = value;
+
+		while (*s != '\\' && *s)
+		{
+			if (!*s)
+				return;
+			*o++ = *s++;
+		}
+		*o = 0;
+
+		strcat( szCommand, pkey );
+		if ( strlen( value ) > 0 )
+		{
+			strcat( szCommand, " " );
+			strcat( szCommand, value );
+		}
+		strcat( szCommand, "\n" );
+
+		if (!*s)
+			return;
+		s++;
+	}
+}
+//END Tony; merge from sdk 2.2
 void CRules::ChangeLevel()
 {
-	char *pfile=(char*)g_engfuncs.pfnLoadFileForMe((char*)CVAR_GET_STRING("mapcyclefile"),0);
-	if(!pfile) {
-		ALERT( at_console, "Unable to load map cycle file %s\n",CVAR_GET_STRING("mapcyclefile"));
-		SERVER_COMMAND("restart\n");
-		return;
-	}
-	char *thismap=(char*)STRING(gpGlobals->mapname);
-	char *first=strtok(pfile," \t\n\r");
-	if(!first) {
-		SERVER_COMMAND("restart\n");
-		return;
-	}
-	char *map=first;
-	do {
-		if(!strcmp(map,thismap)) {
-			char *next=strtok(0," \t\n\r");
-			if(!next)
-				next=first;
-			SERVER_COMMAND(UTIL_VarArgs("changelevel %s\n",next));
-			g_engfuncs.pfnFreeFile(pfile);
-			return;
+	static char szPreviousMapCycleFile[ 256 ];
+	static mapcycle_t mapcycle;
+
+	char szNextMap[32];
+	char szFirstMapInList[32];
+	char szCommands[ 1500 ];
+	char szRules[ 1500 ];
+	int minplayers = 0, maxplayers = 0;
+	strcpy( szFirstMapInList, "hldm1" );  // the absolute default level is hldm1
+
+	int	curplayers;
+	BOOL do_cycle = TRUE;
+
+	// find the map to change to
+	char *mapcfile = (char*)CVAR_GET_STRING( "mapcyclefile" );
+	ASSERT( mapcfile != NULL );
+
+	szCommands[ 0 ] = '\0';
+	szRules[ 0 ] = '\0';
+
+	curplayers = CountPlayers();
+
+	// Has the map cycle filename changed?
+	if ( stricmp( mapcfile, szPreviousMapCycleFile ) )
+	{
+		strcpy( szPreviousMapCycleFile, mapcfile );
+
+		DestroyMapCycle( &mapcycle );
+
+		if ( !ReloadMapCycleFile( mapcfile, &mapcycle ) || ( !mapcycle.items ) )
+		{
+			ALERT( at_console, "Unable to load map cycle file %s\n", mapcfile );
+			do_cycle = FALSE;
 		}
-	} while(map=strtok(0," \t\n\r"));
-	g_engfuncs.pfnFreeFile(pfile);
-	SERVER_COMMAND(UTIL_VarArgs("changelevel %s\n",first));
+	}
+
+	if ( do_cycle && mapcycle.items )
+	{
+		BOOL keeplooking = FALSE;
+		BOOL found = FALSE;
+		mapcycle_item_s *item;
+
+		// Assume current map
+		strcpy( szNextMap, STRING(gpGlobals->mapname) );
+		strcpy( szFirstMapInList, STRING(gpGlobals->mapname) );
+
+		// Traverse list
+		for ( item = mapcycle.next_item; item->next != mapcycle.next_item; item = item->next )
+		{
+			keeplooking = FALSE;
+
+			ASSERT( item != NULL );
+
+			if ( item->minplayers != 0 )
+			{
+				if ( curplayers >= item->minplayers )
+				{
+					found = TRUE;
+					minplayers = item->minplayers;
+				}
+				else
+				{
+					keeplooking = TRUE;
+				}
+			}
+
+			if ( item->maxplayers != 0 )
+			{
+				if ( curplayers <= item->maxplayers )
+				{
+					found = TRUE;
+					maxplayers = item->maxplayers;
+				}
+				else
+				{
+					keeplooking = TRUE;
+				}
+			}
+
+			if ( keeplooking )
+				continue;
+
+			found = TRUE;
+			break;
+		}
+
+		if ( !found )
+		{
+			item = mapcycle.next_item;
+		}			
+		
+		// Increment next item pointer
+		mapcycle.next_item = item->next;
+
+		// Perform logic on current item
+		strcpy( szNextMap, item->mapname );
+
+		ExtractCommandString( item->rulebuffer, szCommands );
+		strcpy( szRules, item->rulebuffer );
+	}
+
+	if ( !IS_MAP_VALID(szNextMap) )
+	{
+		strcpy( szNextMap, szFirstMapInList );
+	}
+
+	GameOver = TRUE;
+
+	ALERT( at_console, "CHANGE LEVEL: %s\n", szNextMap );
+	if ( minplayers || maxplayers )
+	{
+		ALERT( at_console, "PLAYER COUNT:  min %i max %i current %i\n", minplayers, maxplayers, curplayers );
+	}
+	if ( strlen( szRules ) > 0 )
+	{
+		ALERT( at_console, "RULES:  %s\n", szRules );
+	}
+	
+	CHANGE_LEVEL( szNextMap, NULL );
+	if ( strlen( szCommands ) > 0 )
+	{
+		SERVER_COMMAND( szCommands );
+	}
 }
 
 void CRules::Frame()
@@ -281,67 +751,104 @@ void CRules::Frame()
 			ChangeLevel();
 		return;
 	}
-	if(m_bPrestart) {
-		if(((int)(m_flRoundTime-gpGlobals->time))<=0)
+
+	if(m_bPrestart) 
+	{
+		if (m_flRoundTime < gpGlobals->time)
 			UTIL_ClientPrintAll(HUD_PRINTCENTER,"Warm-up time over");
 	}
+
 	if(m_RoundState==ROUND_FREEZE)
 	{
-		if(gpGlobals->time>=m_flRoundTime)
+		damageDisabled = true; //can't take damage when this is set; prevents killing during freeze time, or whatever.
+		//Tony; re-worked to check to start a round, based on number of players; no point in starting
+		//a round if there are no players on it!!
+		if(m_flRoundTime <= gpGlobals->time)
 		{
-			
+#if 0
 			CBasePlayer *plr;
+			int numRed = 0, numBlue = 0; //has to be at least one on each team before the round goes out of freeze time.
+			//since player's are eliminated cuasing wins, there has to be a team before it can be either a draw
+			//or an opposing team win.
+
+			//todo; take the CS / FLF 2.0 approach; with the "practice" one-player on one-team round.
 			for(int i=1;i<=gpGlobals->maxClients;i++)
 			{
 				plr=(CBasePlayer*)UTIL_PlayerByIndex(i);
-				if(plr&&plr->pev->team!=TEAM_SPEC)
+				if (plr)
 				{
-					g_engfuncs.pfnSetClientMaxspeed(plr->edict(),1000);
-					plr->pev->takedamage=DAMAGE_YES;
+					if (plr->pev->team == TEAM_BLUE)
+						numBlue++;
+					if (plr->pev->team == TEAM_RED)
+						numRed++;
 				}
 			}
-			m_flRoundTime=gpGlobals->time+mp_roundtime.value;
-			m_RoundState=ROUND_ACTIVE;
+
+			if (numRed > 0 && numBlue > 0)
+			{
+#endif
+				m_flRoundTime=gpGlobals->time+mp_roundtime.value;
+				m_RoundState=ROUND_ACTIVE;
+				//start round
+				UTIL_ClientPrintAll(HUD_PRINTCENTER, "Round Begin!\n");
+				damageDisabled = false; //take damage again.
+#if 0
+			}
+			else //do another 5 seconds of warmup time
+			{
+				m_flRoundTime = gpGlobals->time + mp_freezetime.value;
+				UTIL_ClientPrintAll(HUD_PRINTCENTER, "Each team must have at least one player before the round will start.\nResetting Warmup.");
+			}
+#endif
 			MESSAGE_BEGIN(MSG_ALL,gmsgTimer,NULL);
 				WRITE_BYTE(m_RoundState);
 				WRITE_SHORT((int)mp_roundtime.value);
 			MESSAGE_END();
 		}
 	}
-	else if(m_RoundState==ROUND_ACTIVE)
+	else if ( m_RoundState == ROUND_ACTIVE )
 	{
-		if((m_bPrestart||mp_roundtime.value>0)&&m_flRoundTime<=gpGlobals->time)
+		//why is this ending on pre-start ? shouldn't it just keep going? .. 
+		//okay i get it now. if it's prestart or roundtime is > 0, and roundtime < time, end
+		//then do it; otherwise it wont.
+		//makes sense now.
+		//so if mp_roundtime is 0, it wont end the round, but it will end the round if prestart is set.
+		if ( ( m_bPrestart || mp_roundtime.value > 0 ) && m_flRoundTime <= gpGlobals->time )
 			EndRound(WIN_DRAW);
 	}
 	else
 	{
-		if(m_flRoundTime<=gpGlobals->time)
+		//if we're not in freeze, or active time; this should function.
+		if ( m_flRoundTime <= gpGlobals->time )
 		{
-			m_iRounds++;
+			damageDisabled = true; //can't take damage when this is set; prevents killing during freeze time, or whatever.
+
 			float time=mp_timelimit.value*60;
 			int rnds=(int)mp_roundlimit.value;
-			if((time>0&&gpGlobals->time>=time)||(rnds>0&&m_iRounds>=rnds))
+
+//			ALERT(at_console, "m_iRounds i\n", m_iRounds);
+			if((time > 0 && gpGlobals->time >= time) || (rnds> 0 && m_iRounds >= rnds))
 			{
 				Intermission();
 				return;
 			}
+
 			CBasePlayer *plr;
 			m_RoundState=ROUND_FREEZE;
 			m_flRoundTime=gpGlobals->time+mp_freezetime.value;
+
 			MESSAGE_BEGIN(MSG_ALL,gmsgTimer,NULL);
 				WRITE_BYTE(m_RoundState);
 				WRITE_SHORT((int)mp_freezetime.value);
 			MESSAGE_END();
-			if(mp_changeteams.value) {
+
+			if(mp_changeteams.value) 
+			{
 				int tmp=m_iRedScore;
 				m_iRedScore=m_iBlueScore;
 				m_iBlueScore=tmp;
 				MESSAGE_BEGIN(MSG_ALL,gmsgTeamScore,NULL);
-					WRITE_BYTE(1);
 					WRITE_BYTE(m_iRedScore);
-				MESSAGE_END();
-				MESSAGE_BEGIN(MSG_ALL,gmsgTeamScore,NULL);
-					WRITE_BYTE(2);
 					WRITE_BYTE(m_iBlueScore);
 				MESSAGE_END();
 			}
@@ -350,10 +857,13 @@ void CRules::Frame()
 				plr=(CBasePlayer*)UTIL_PlayerByIndex(i);
 				if(!plr)
 					continue;
+
 				if(!m_bPrestart) 
 					plr->credits+=(int)mp_roundcredits.value;
+
 				if(plr->credits>(int)mp_maxcredits.value)
 						plr->credits=(int)mp_maxcredits.value;
+
 				MESSAGE_BEGIN(MSG_ONE,gmsgCredits,NULL,plr->edict());
 					WRITE_BYTE(plr->credits);
 				MESSAGE_END();
@@ -371,11 +881,15 @@ void CRules::Frame()
 					plr->DropFlag(0);
 					plr->ExecConfig();
 					plr->Spawn();
-					g_engfuncs.pfnSetClientMaxspeed(plr->edict(),0.00001);
-					plr->pev->takedamage=DAMAGE_NO;
+
+					MESSAGE_BEGIN( MSG_ONE, gmsgNewRound, NULL, plr->pev );
+					MESSAGE_END();
+
+					g_engfuncs.pfnSetClientMaxspeed(plr->edict(),1000.0f);
 				}
 			}
-			if(m_bPrestart) {
+			if(m_bPrestart) 
+			{
 				m_bPrestart=0;
 				m_iRounds=0;
 			}
@@ -409,6 +923,7 @@ void CRules::Frame()
 				dr->Restart();
 				dr =(CFuncTrain*)UTIL_FindEntityByClassname(dr, "func_train");
 			}
+			m_iRounds++;
 		}
 	}
 }
@@ -437,24 +952,15 @@ void CRules::ChangeTeam(CBasePlayer *plr,int team)
 		plr->m_flSpawnTime=0;
 		break;
 	}
-	if(plr->pev->team!=TEAM_SPEC)
+
+	if ( plr->pev->team != TEAM_SPEC )
 	{
-		if(m_bPrestart || m_RoundState==ROUND_FREEZE||mp_respawntime.value==0.0f)
+		if ( m_bPrestart || m_RoundState == ROUND_FREEZE || mp_respawntime.value == 0.0f )
 		{
 			plr->StopSpectating();
 			plr->Spawn();
-			if(m_RoundState==ROUND_FREEZE)
-			{
-				g_engfuncs.pfnSetClientMaxspeed(plr->edict(),0.00001);
-				plr->pev->takedamage=DAMAGE_NO;
-			}
-			else
-			{
-				plr->pev->takedamage=DAMAGE_YES;
-				g_engfuncs.pfnSetClientMaxspeed(plr->edict(),1000.0f);
-			}
 		}
-		else if(!plr->pev->deadflag)
+		else if ( !plr->pev->deadflag )
 		{
 			plr->pev->health=0;
 			ClientKill(plr->edict());
@@ -502,15 +1008,12 @@ void CRules::InitHUD(CBasePlayer *pl)
 	MESSAGE_BEGIN(MSG_ONE,gmsgCredits,NULL,pl->edict());
 		WRITE_BYTE(pl->credits);
 	MESSAGE_END();
-	MESSAGE_BEGIN(MSG_ONE,gmsgCurMarker,0,pl->pev);
-		WRITE_BYTE(0xFF);
+	MESSAGE_BEGIN(MSG_ONE,gmsgCurMarker,NULL,pl->pev);
+		WRITE_BYTE(255);
 	MESSAGE_END();
-	MESSAGE_BEGIN(MSG_ONE,gmsgTeamScore,0,pl->edict());
-		WRITE_BYTE(1);
+	//Tony; cleaned this up
+	MESSAGE_BEGIN(MSG_ONE,gmsgTeamScore,NULL,pl->edict());
 		WRITE_BYTE(m_iRedScore);
-	MESSAGE_END();
-	MESSAGE_BEGIN(MSG_ONE,gmsgTeamScore,0,pl->edict());
-		WRITE_BYTE(2);
 		WRITE_BYTE(m_iBlueScore);
 	MESSAGE_END();
 	SendMOTD( pl->edict() );
@@ -569,15 +1072,15 @@ void CRules::EndRound(int reason)
 		case WIN_RED:
 			m_iRedScore++;
 			MESSAGE_BEGIN(MSG_ALL,gmsgTeamScore,NULL);
-				WRITE_BYTE(1);
 				WRITE_BYTE(m_iRedScore);
+				WRITE_BYTE(m_iBlueScore);
 			MESSAGE_END();
 			UTIL_ClientPrintAll(HUD_PRINTCENTER,"Red Wins!");
 			break;
 		case WIN_BLUE:
 			m_iBlueScore++;
 			MESSAGE_BEGIN(MSG_ALL,gmsgTeamScore,NULL);
-				WRITE_BYTE(2);
+				WRITE_BYTE(m_iRedScore);
 				WRITE_BYTE(m_iBlueScore);
 			MESSAGE_END();
 			UTIL_ClientPrintAll(HUD_PRINTCENTER,"Blue Wins!");
@@ -633,6 +1136,8 @@ void CRules::SpawnSpot(CBasePlayer *player)
 }
 bool CRules::CanTakeDamage(edict_t *victim,edict_t* attacker)
 {
+	if (damageDisabled)
+		return false; //Tony; no damage when it's disabled.
 	if(victim->v.deadflag || victim->v.takedamage==DAMAGE_NO||(victim->v.team==attacker->v.team&&mp_friendlyfire.value==0))
 		return 0;
 	else
@@ -660,7 +1165,7 @@ void CRules::PlayerKilled(CBasePlayer *vic,entvars_t* killer)
 				player->credits+=(int)mp_markcredits.value;
 				if(player->credits>(int)mp_maxcredits.value)
 						player->credits=(int)mp_maxcredits.value;
-				MESSAGE_BEGIN(MSG_ONE,gmsgCredits,0,player->edict());
+				MESSAGE_BEGIN(MSG_ONE,gmsgCredits,NULL,player->edict());
 					WRITE_BYTE(player->credits);
 				MESSAGE_END();
 			}
@@ -746,18 +1251,16 @@ void CRules::PlayerKilled(CBasePlayer *vic,entvars_t* killer)
 	}
 }
 
-void restart_round() {
-	if(gRules.m_RoundState==ROUND_ACTIVE) {
-		gRules.m_flRoundTime=gpGlobals->time+1.0f;
+void restart_round() 
+{
+	if(gRules->m_RoundState==ROUND_ACTIVE) 
+	{
+		gRules->m_flRoundTime=gpGlobals->time+1.0f;
 		UTIL_ClientPrintAll(HUD_PRINTCENTER,"Round Restarting");
-		gRules.m_iBlueScore=gRules.m_iRedScore=0;
+		gRules->m_iBlueScore=gRules->m_iRedScore=0;
 		MESSAGE_BEGIN(MSG_ALL,gmsgTeamScore,NULL);
-				WRITE_BYTE(1);
-				WRITE_BYTE(gRules.m_iRedScore);
-		MESSAGE_END();
-		MESSAGE_BEGIN(MSG_ALL,gmsgTeamScore,NULL);
-				WRITE_BYTE(2);
-				WRITE_BYTE(gRules.m_iBlueScore);
+			WRITE_BYTE(gRules->m_iRedScore);
+			WRITE_BYTE(gRules->m_iBlueScore);
 		MESSAGE_END();
 		for ( int i = 1; i <= gpGlobals->maxClients; i++ )
 		{
@@ -777,3 +1280,5 @@ void restart_round() {
 		}
 	}
 }
+
+

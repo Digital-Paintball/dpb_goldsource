@@ -3,6 +3,7 @@
 #define ROUND_FREEZE 0
 #define ROUND_ACTIVE 1
 #define ROUND_OVER 2
+#define ROUND_PRESTART 3 //Tony; adding for before anyone has ever been in the game. no point in starting rounds if noones there!
 #define WIN_DRAW 0
 #define WIN_RED 1
 #define WIN_BLUE 2
@@ -53,8 +54,10 @@ public:
 	vec3_t m_vCenter;
 	int m_iSpawns;
 	vec3_t m_vSpawns;
+
+	bool damageDisabled;
 };
 	
-extern CRules gRules;
+extern DLL_GLOBAL CRules*	gRules;
 extern CDpbVoice gVoice;
 #endif 

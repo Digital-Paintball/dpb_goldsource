@@ -35,9 +35,31 @@ void CPointEntity :: Spawn( void )
 //	UTIL_SetSize(pev, g_vecZero, g_vecZero);
 }
 
+
+class CNullEntity : public CBaseEntity
+{
+public:
+	void Spawn( void );
+};
+
+
+// Null Entity, remove on startup
+void CNullEntity :: Spawn( void )
+{
+	REMOVE_ENTITY(ENT(pev));
+}
+LINK_ENTITY_TO_CLASS(info_null,CNullEntity);
+
+LINK_ENTITY_TO_CLASS(info_player_deathmatch,CNullEntity);
+LINK_ENTITY_TO_CLASS(info_player_start,CNullEntity);
+LINK_ENTITY_TO_CLASS(info_paintball,CNullEntity);
+void CBaseEntity::UpdateOnRemove( void )
+{
+}
 // Convenient way to delay removing oneself
 void CBaseEntity :: SUB_Remove( void )
 {
+	UpdateOnRemove();
 	if (pev->health > 0)
 	{
 		// this situation can screw up monsters who can't tell their entity pointers are invalid.
@@ -431,8 +453,8 @@ LINK_ENTITY_TO_CLASS(info_playerstart_blue,CSpawnPoint);
 void CSpawnPoint::Spawn()
 {
 	pev->solid=SOLID_NOT;
-	gRules.m_iSpawns++;
-	gRules.m_vSpawns=gRules.m_vSpawns+pev->origin;
-	gRules.m_vCenter=gRules.m_vSpawns*(1.0/gRules.m_iSpawns);
+	gRules->m_iSpawns++;
+	gRules->m_vSpawns=gRules->m_vSpawns+pev->origin;
+	gRules->m_vCenter=gRules->m_vSpawns*(1.0/gRules->m_iSpawns);
 }
 

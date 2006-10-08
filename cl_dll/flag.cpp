@@ -27,7 +27,7 @@ int CHudFlag::MsgFunc_Flag(const char *pszName,int iSize,void *pbuf)
 	BEGIN_READ(pbuf,iSize);
 	int idx=READ_BYTE();
 	g_PlayerExtraInfo[idx].flag=READ_BYTE();
-	gEngfuncs.Con_Printf("Got msg: %i\n",idx,g_PlayerExtraInfo[idx].flag);
+//	gEngfuncs.Con_Printf("Got msg: %i\n",idx,g_PlayerExtraInfo[idx].flag);
 	if(g_PlayerExtraInfo[gEngfuncs.GetLocalPlayer()->index].flag)
 		m_iFlags|=HUD_ACTIVE;
 	else 

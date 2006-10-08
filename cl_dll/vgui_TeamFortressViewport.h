@@ -1468,7 +1468,12 @@ private:
 	int m_iMaxCredits;
 	Label *m_Credits;
 	Label *m_Pods;
+	void SaveSelection(); //Tony; added for saving and loading selection
+	void LoadSelection();
+	//tony load data
+	int imarker, ibarrel, ipods, ipaint, ijersey, imask;
 public:
+	virtual void Reset(); //where we're gonna load data.
 	ComboBox *m_Paint;
 	ComboBox *m_Jersey;
 	ComboBox *m_Mask;

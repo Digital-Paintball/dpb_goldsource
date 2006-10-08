@@ -53,6 +53,7 @@ int CHudDeath::VidInit() {
 	death=SPR_Load("sprites/death.spr");
 	return 1;
 }
+extern void ResetProne(); //Tony; Turn prone off just incase it's on.
 int CHudDeath::MsgFunc_Death( const char *pszName, int iSize, void *pbuf ) {
 	int i,j;
 	int lines=num_lines();
@@ -82,6 +83,7 @@ int CHudDeath::MsgFunc_Death( const char *pszName, int iSize, void *pbuf ) {
 	g_PlayerExtraInfo[deaths[i].victim].dead = 1;
 	if(deaths[i].victim==gEngfuncs.GetLocalPlayer()->index) {
 		CAM_ToThirdPerson();
+		ResetProne(); //Tony; dead, toggle the prone key.
     if(gHUD.m_Hopper.m_iCurWeapon!=-1)
     	weapons[gHUD.m_Hopper.m_iCurWeapon]->Reset();
 	}

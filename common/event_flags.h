@@ -14,6 +14,9 @@
 ****/
 #if !defined( EVENT_FLAGSH )
 #define EVENT_FLAGSH
+#ifdef _WIN32
+#pragma once
+#endif
 
 // Skip local host for event send.
 #define FEV_NOTHOST		(1<<0)    

@@ -64,7 +64,7 @@ void CObject::Touch(CBaseEntity *pOther)
 LINK_ENTITY_TO_CLASS(cflag,CObject);
 void CObjectSpawner::Spawn()
 {
-	gRules.m_CFlag=this;
+	gRules->m_CFlag=this;
 	pev->team=0;
 	pev->movetype=MOVETYPE_NONE;
 	pev->solid=SOLID_NOT;
@@ -78,7 +78,7 @@ void CObjectSpawner::Spawn()
 void CRed::Spawn()
 {
 	pev->team=1;
-	gRules.m_RFlag=this;
+	gRules->m_RFlag=this;
 	pev->movetype=MOVETYPE_NONE;
 	pev->solid=SOLID_NOT;
 	SetThink(NULL);
@@ -91,7 +91,7 @@ void CRed::Spawn()
 void CBlue::Spawn()
 {
 	pev->team=2;
-	gRules.m_BFlag=this;
+	gRules->m_BFlag=this;
 	pev->movetype=MOVETYPE_NONE;
 	pev->solid=SOLID_NOT;
 	SetThink(NULL);
@@ -130,7 +130,7 @@ void CCapPoint::Touch(CBaseEntity *pOther)
 	if(!pOther->IsPlayer())
 		return;
 	CBasePlayer* pPlayer=(CBasePlayer*)pOther;
-	if(gRules.m_RoundState!=ROUND_ACTIVE||!pPlayer->m_Object||pev->team!=pPlayer->pev->team)
+	if(gRules->m_RoundState!=ROUND_ACTIVE||!pPlayer->m_Object||pev->team!=pPlayer->pev->team)
 			return;
 	pPlayer->pev->frags++;
 	for(int i=1;i<=gpGlobals->maxClients;i++)
@@ -150,9 +150,9 @@ void CCapPoint::Touch(CBaseEntity *pOther)
 		}
 	}
 	if(pPlayer->pev->team==TEAM_RED)
-		gRules.EndRound(WIN_RED);
+		gRules->EndRound(WIN_RED);
 	else
-		gRules.EndRound(WIN_BLUE);
+		gRules->EndRound(WIN_BLUE);
 	
 	pev->nextthink=-1;
 }

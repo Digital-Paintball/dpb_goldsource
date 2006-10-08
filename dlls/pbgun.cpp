@@ -2,6 +2,8 @@
 #include"player.h"
 #include"rules.h"
 #include"buy.h"
+
+#include "paintballs.h"
 extern int gmsgCurMarker;
 void CPaintballGun::Spawn()
 {
@@ -27,7 +29,7 @@ void CPaintballGun::Holster()
 	player->m_fDeployed=0;
 	player->pev->weaponmodel=0;
 	player->pev->viewmodel=0;
-	MESSAGE_BEGIN(MSG_ONE,gmsgCurMarker,0,player->pev);
+	MESSAGE_BEGIN(MSG_ONE,gmsgCurMarker,NULL,player->pev);
 		WRITE_BYTE(0xFF);
 	MESSAGE_END();
 }
@@ -56,9 +58,10 @@ void CPaintballGun::PaintballFire(float max)
 	vecadd(gpGlobals->v_forward,gpGlobals->v_right);
 	vecadd(gpGlobals->v_forward,gpGlobals->v_up);
 	UTIL_Normalize(gpGlobals->v_forward);
-	FirePaintball(Gunpos,gpGlobals->v_forward,player->entindex());
+//	FirePaintball(Gunpos,gpGlobals->v_forward,player->entindex());
+	gBallManager.FirePaintball(Gunpos, gpGlobals->v_forward, player->entindex()); //Tony; new
 	PLAYBACK_EVENT_FULL(FEV_NOTHOST,player->edict(),g_usPaintball,0.0f,Gunpos,player->pev->v_angle/*+player->pev->punchangle*/,sr*1000.0f,su*1000.0f,m_iId,player->m_iColor,0,0);
-	if(!gRules.m_bPrestart)
+	if(!gRules->m_bPrestart)
 		m_iHopper--;
 }
 
@@ -95,7 +98,7 @@ void CPaintballGun::DefDeploy(int seq,char *v_model,char* p_model,int showanim)
 			WRITE_BYTE( player->m_iBarrel );					// weaponmodel bodygroup.
 		MESSAGE_END();
 	}
-	MESSAGE_BEGIN(MSG_ONE,gmsgCurMarker,0,player->pev);
+	MESSAGE_BEGIN(MSG_ONE,gmsgCurMarker,NULL,player->pev);
 		WRITE_BYTE(m_iId);
 	MESSAGE_END();
 	m_flPrimaryAttack=1.0f;
@@ -135,9 +138,9 @@ void CPaintballGun::WeaponPostThink()
 {
 	if( (player->pev->button & IN_RELOAD) && m_flReload<=0 && m_iHopper<200&& player->m_iTube)
 		Reload();
-	else if(gRules.m_RoundState && (player->pev->button & IN_ATTACK ) && (!(player->pev->button&IN_RELOAD))  && m_flPrimaryAttack<=0 && m_bPrimaryAttack && m_iHopper>0)
+	else if(gRules->m_RoundState && (player->pev->button & IN_ATTACK ) && (!(player->pev->button&IN_RELOAD))  && m_flPrimaryAttack<=0 && m_bPrimaryAttack && m_iHopper>0)
 		PrimaryAttack();
-	else if(gRules.m_RoundState && (player->pev->button & IN_ATTACK2) && (!(player->pev->button&IN_RELOAD)) && m_flSecondaryAttack<=0 && m_bSecondaryAttack )
+	else if(gRules->m_RoundState && (player->pev->button & IN_ATTACK2) && (!(player->pev->button&IN_RELOAD)) && m_flSecondaryAttack<=0 && m_bSecondaryAttack )
 		SecondaryAttack();
 	else if(m_flIdle<=0.0 && (!(player->pev->button&(IN_ATTACK|IN_ATTACK2))) && ((!(player->pev->button&IN_RELOAD))||m_iHopper==200||!player->m_iTube))
 		Idle();

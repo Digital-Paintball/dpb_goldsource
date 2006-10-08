@@ -15,6 +15,11 @@ public:
 	int m_iOption;
 	ComboBox(int x,int y,int w,int h,int c,char *def,int id,CMenuPanel *cont);
 	void addItem(char *s);
+	void SelectItem(int i)
+	{
+		m_iSelected = i;
+		m_iOption = i;
+	}
 	void reset(char *s);
 	friend class CHandler_ShowCombo;
 	friend class CHandler_CloseCombo;

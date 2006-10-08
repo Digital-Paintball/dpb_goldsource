@@ -7,6 +7,12 @@
 
 #ifndef BITVEC_H
 #define BITVEC_H
+#ifdef _WIN32
+#pragma once
+#endif
+
+
+#include <assert.h>
 
 
 class CBitVecAccessor
@@ -124,7 +130,7 @@ inline CBitVec<NUM_BITS>& CBitVec<NUM_BITS>::operator=(CBitVec<NUM_BITS> const &
 template<int NUM_BITS>
 inline CBitVecAccessor CBitVec<NUM_BITS>::operator[](int i)	
 {
-	
+	assert(i >= 0 && i < GetNumBits());
 	return CBitVecAccessor(m_DWords, i);
 }
 
@@ -156,7 +162,7 @@ inline int CBitVec<NUM_BITS>::GetNumDWords()
 template<int NUM_BITS>
 inline unsigned long CBitVec<NUM_BITS>::GetDWord(int i)
 {
-	
+	assert(i >= 0 && i < NUM_DWORDS);
 	return m_DWords[i];
 }
 
@@ -164,7 +170,7 @@ inline unsigned long CBitVec<NUM_BITS>::GetDWord(int i)
 template<int NUM_BITS>
 inline void CBitVec<NUM_BITS>::SetDWord(int i, unsigned long val)
 {
-	
+	assert(i >= 0 && i < NUM_DWORDS);
 	m_DWords[i] = val;
 }
 

@@ -28,7 +28,8 @@
 #include <math.h>   // sqrt
 #include <string.h> // strcpy
 #include <stdlib.h> // atoi
-//#include <ctype.h>  // isspace
+//Tony; compiling in vc, i need this.
+#include <ctype.h>  // isspace
 
 #ifdef CLIENT_DLL
 	// Spectator Mode

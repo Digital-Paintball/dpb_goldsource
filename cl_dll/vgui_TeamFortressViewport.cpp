@@ -2181,10 +2181,9 @@ int TeamFortressViewport::MsgFunc_Credits( const char *pszName, int iSize, void 
 }
 int TeamFortressViewport::MsgFunc_TeamScore( const char *pszName, int iSize, void *pbuf )
 {
-	int team;
 	BEGIN_READ( pbuf, iSize );
-	team=READ_BYTE();
-	g_TeamInfo[team].frags=READ_BYTE();
+	g_TeamInfo[1].frags = READ_BYTE();
+	g_TeamInfo[2].frags = READ_BYTE();
 	return 1;
 }
 void CAM_ToFirstPerson();

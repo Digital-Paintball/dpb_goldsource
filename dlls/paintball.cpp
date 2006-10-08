@@ -5,14 +5,9 @@
 #define DRAG_COEFF (0.000763) // reduced as in client.
 extern "C" int PM_ClipVelocity(float *in,float *normal,float *out,float overbounce);
 unsigned short g_usPaintball;
-class pbnode
-{
-public:
-		float origin[3];
-		float velocity[3];
-		float threshold;
-		pbnode *next;
-};
+
+#include "paintballs.h"
+PaintBallManager gBallManager;
 
 static float Length(const float *v)
 {
@@ -46,6 +41,84 @@ static void VectorCopy (const float *in, float *out)
     out[1] = in[1];
     out[2] = in[2];
 }
+void PaintBallManager::RemoveBalls(int idx)
+{
+	if (idx == -1)
+		paintballs.clear();
+	else
+	{
+		std::list<pBall_t>::iterator iter;
+		for (iter=paintballs.begin();iter!=paintballs.end();iter++)
+		{
+			if ((*iter).playerIndex == idx)
+				iter = paintballs.erase(iter);
+		}
+	}
+}
+void PaintBallManager::FirePaintball(float *origin, float *velocity, int owner)
+{
+	pBall_t newBall;
+	newBall.playerIndex = owner;
+	VectorScale(velocity, 280.0*12.0, newBall.velocity);
+	VectorCopy(origin, newBall.origin);
+	newBall.threshold = RANDOM_FLOAT(50.0f, 100.0f) * 12.0;
+
+	paintballs.push_back(newBall); //add the new ball to the list for processorizing
+}
+
+void PaintBallManager::RunPaintballs()
+{
+	std::list<pBall_t>::iterator iter;
+
+	float neworigin[3];
+	TraceResult tr;
+
+	edict_t *e;
+	for (iter=paintballs.begin();iter!=paintballs.end();iter++)
+	{
+		e=INDEXENT((*iter).playerIndex);
+		if (!e)
+		{
+			//Kill ball..owner gone.
+			iter = paintballs.erase(iter);
+			continue;
+		}
+
+		VectorMA((*iter).origin, gpGlobals->frametime, (*iter).velocity, neworigin);
+		TRACE_LINE((*iter).origin, neworigin, 0, e, &tr);
+		if (tr.flFraction < 1.0f )
+		{
+			if (tr.pHit && Length((*iter).velocity) > (*iter).threshold)
+			{
+				int idx = ENTINDEX(tr.pHit);
+				if (idx > 0 && idx < gpGlobals->maxClients && gRules->CanTakeDamage(tr.pHit,e))
+				{
+					CBasePlayer *plr = (CBasePlayer*)CBaseEntity::Instance(tr.pHit);
+					if (plr)
+					{
+						plr->pev->health = 0;
+						plr->Killed(&(e->v), 0 );
+					}
+				}
+				//Kill ball..
+				iter = paintballs.erase(iter);
+				continue;
+			}
+			VectorCopy(neworigin,(*iter).origin);
+			(*iter).velocity[2] -= 284.0f * gpGlobals->frametime; // kuja reduced as in client
+			VectorScale((*iter).velocity, 1.0/(1.0+DRAG_COEFF * gpGlobals->frametime * Length((*iter).velocity)), (*iter).velocity);
+		}
+	}
+}
+#if 0
+class pbnode
+{
+public:
+		float origin[3];
+		float velocity[3];
+		float threshold;
+		pbnode *next;
+};
 pbnode *pbroot[32];
 pbnode *addball(int slot) 
 {
@@ -72,7 +145,8 @@ void delnextball(pbnode *ball,int slot)
 				delete temp;
 		}
 }
-void RemoveBalls(int owner) {
+void RemoveBalls(int owner) 
+{
 	if(!owner) {
 		for(int i=1;i<=gpGlobals->maxClients;i++)
 			RemoveBalls(i);
@@ -104,7 +178,7 @@ void RunPaintballs()
 			if(tr.flFraction!=1.0f) {
 				if(tr.pHit&&Length(cur->velocity)>cur->threshold) {
 						int idx=ENTINDEX(tr.pHit);
-						if(idx>0&&idx<=gpGlobals->maxClients&&gRules.CanTakeDamage(tr.pHit,e)) {
+						if(idx>0&&idx<=gpGlobals->maxClients&&gRules->CanTakeDamage(tr.pHit,e)) {
 							CBasePlayer *plr=(CBasePlayer*)CBaseEntity::Instance(tr.pHit);
 							if(plr) {
 								plr->pev->health=0;
@@ -137,7 +211,7 @@ void FirePaintball(float *origin,float *velocity,int owner)
 		pb->threshold=RANDOM_FLOAT(50.0f,100.0f)*12.0;
 	}
 }
-
+#endif
 
 
 void CPod::Spawn()

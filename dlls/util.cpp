@@ -318,6 +318,42 @@ TYPEDESCRIPTION	gEntvarsDescription[] =
 
 #define ENTVARS_COUNT		(sizeof(gEntvarsDescription)/sizeof(gEntvarsDescription[0]))
 
+
+#ifdef	DEBUG
+edict_t *DBG_EntOfVars( const entvars_t *pev )
+{
+	if (pev->pContainingEntity != NULL)
+		return pev->pContainingEntity;
+	ALERT(at_console, "entvars_t pContainingEntity is NULL, calling into engine");
+	edict_t* pent = (*g_engfuncs.pfnFindEntityByVars)((entvars_t*)pev);
+	if (pent == NULL)
+		ALERT(at_console, "DAMN!  Even the engine couldn't FindEntityByVars!");
+	((entvars_t *)pev)->pContainingEntity = pent;
+	return pent;
+}
+#endif //DEBUG
+
+
+#ifdef	DEBUG
+	void
+DBG_AssertFunction(
+	BOOL		fExpr,
+	const char*	szExpr,
+	const char*	szFile,
+	int			szLine,
+	const char*	szMessage)
+	{
+	if (fExpr)
+		return;
+	char szOut[512];
+	if (szMessage != NULL)
+		sprintf(szOut, "ASSERT FAILED:\n %s \n(%s@%d)\n%s", szExpr, szFile, szLine, szMessage);
+	else
+		sprintf(szOut, "ASSERT FAILED:\n %s \n(%s@%d)", szExpr, szFile, szLine);
+	ALERT(at_console, szOut);
+	}
+#endif	// DEBUG
+
 // ripped this out of the engine
 float	UTIL_AngleMod(float a)
 {
@@ -1112,17 +1148,6 @@ void UTIL_BloodDrips( const Vector &origin, const Vector &direction, int color, 
 	amount *= 2;
 	if ( amount > 255 )
 		amount = 255;
-/*
-	MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, origin );
-		WRITE_BYTE( TE_BLOODSPRITE );
-		WRITE_COORD( origin.x);								// pos
-		WRITE_COORD( origin.y);
-		WRITE_COORD( origin.z);
-		WRITE_SHORT( g_sModelIndexBloodSpray );				// initial sprite model
-		WRITE_SHORT( g_sModelIndexBloodDrop );				// droplet sprite models
-		WRITE_BYTE( color );								// color index into host_basepal
-		WRITE_BYTE( min( max( 3, amount / 10 ), 16 ) );		// size
-	MESSAGE_END();*/
 }				
 
 Vector UTIL_RandomBloodVector( void )
@@ -1135,19 +1160,6 @@ Vector UTIL_RandomBloodVector( void )
 
 	return direction;
 }
-/*
-
-void UTIL_BloodDecalTrace( TraceResult *pTrace, int bloodColor )
-{
-	if ( UTIL_ShouldShowBlood( bloodColor ) )
-	{
-		if ( bloodColor == BLOOD_COLOR_RED )
-			UTIL_DecalTrace( pTrace, DECAL_BLOOD1 + RANDOM_LONG(0,5) );
-		else
-			UTIL_DecalTrace( pTrace, DECAL_YBLOOD1 + RANDOM_LONG(0,5) );
-	}
-}
-*/
 
 void UTIL_DecalTrace( TraceResult *pTrace, int decalNumber )
 {
@@ -1169,9 +1181,9 @@ void UTIL_DecalTrace( TraceResult *pTrace, int decalNumber )
 	// Only decal BSP models
 	if ( pTrace->pHit )
 	{
-	/*	CBaseEntity *pEntity = CBaseEntity::Instance( pTrace->pHit );
+		CBaseEntity *pEntity = CBaseEntity::Instance( pTrace->pHit );
 		if ( pEntity && !pEntity->IsBSPModel() )
-			return;*/
+			return;
 		entityIndex = ENTINDEX( pTrace->pHit );
 	}
 	else 
@@ -1436,19 +1448,6 @@ void UTIL_Bubbles( Vector mins, Vector maxs, int count )
 	float flHeight = UTIL_WaterLevel( mid,  mid.z, mid.z + 1024 );
 	flHeight = flHeight - mins.z;
 
-/*	MESSAGE_BEGIN( MSG_PAS, SVC_TEMPENTITY, mid );
-		WRITE_BYTE( TE_BUBBLES );
-		WRITE_COORD( mins.x );	// mins
-		WRITE_COORD( mins.y );
-		WRITE_COORD( mins.z );
-		WRITE_COORD( maxs.x );	// maxz
-		WRITE_COORD( maxs.y );
-		WRITE_COORD( maxs.z );
-		WRITE_COORD( flHeight );			// height
-		WRITE_SHORT( g_sModelIndexBubbles );
-		WRITE_BYTE( count ); // count
-		WRITE_COORD( 8 ); // speed
-	MESSAGE_END();*/
 }
 
 void UTIL_BubbleTrail( Vector from, Vector to, int count )
@@ -1469,20 +1468,6 @@ void UTIL_BubbleTrail( Vector from, Vector to, int count )
 
 	if (count > 255) 
 		count = 255;
-/*
-	MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
-		WRITE_BYTE( TE_BUBBLETRAIL );
-		WRITE_COORD( from.x );	// mins
-		WRITE_COORD( from.y );
-		WRITE_COORD( from.z );
-		WRITE_COORD( to.x );	// maxz
-		WRITE_COORD( to.y );
-		WRITE_COORD( to.z );
-		WRITE_COORD( flHeight );			// height
-		WRITE_SHORT( g_sModelIndexBubbles );
-		WRITE_BYTE( count ); // count
-		WRITE_COORD( 8 ); // speed
-	MESSAGE_END();*/
 }
 
 
@@ -1490,6 +1475,8 @@ void UTIL_Remove( CBaseEntity *pEntity )
 {
 	if ( !pEntity )
 		return;
+
+	pEntity->UpdateOnRemove();
 	pEntity->pev->flags |= FL_KILLME;
 	pEntity->pev->targetname = 0;
 }

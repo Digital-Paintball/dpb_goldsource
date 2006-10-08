@@ -516,11 +516,16 @@ void IN_GraphUp(void) {KeyUp(&in_graph);}
 int active;
 
 int proned=0;
-
+//Tony; added so when you respawn proned is turned off! duh.
+void ResetProne()
+{
+	proned = 0;
+}
 void IN_ToggleProne() 
 {
-  if(g_iUser4&U_PRONING)
-  	proned=0;
+	//Tony; modified this so that you can't unprone unless your stamina is > 5 (to prevent lame humping)
+	if ( g_iUser4&U_PRONING && gHUD.m_Hopper.m_flStamina>5.0)
+  		proned=0;
 	else
 		proned=1;
   //gEngfuncs.Con_Printf("proning %i\n",proned);
@@ -964,7 +969,8 @@ int CL_ButtonBits( int bResetState )
 	{
 		bits |= IN_DASH;
 	}
-	if(proned||(g_iUser4&U_PRONING&&gHUD.m_Hopper.m_flStamina<100.0))
+	//Tony; modified so it forces you to stay prone when stamina is under 30.
+	if ( proned || (g_iUser4&U_PRONING&&gHUD.m_Hopper.m_flStamina<5.0) )
 		bits|=IN_PRONE;
 
 	if ( bResetState )

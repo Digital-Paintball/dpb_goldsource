@@ -101,17 +101,29 @@ typedef int BOOL;
 //
 // Conversion among the three types of "entity", including identity-conversions.
 //
-
-inline edict_t *ENT(const entvars_t *pev)	{ return pev->pContainingEntity; }
+#ifdef DEBUG
+	extern edict_t *DBG_EntOfVars(const entvars_t *pev);
+	inline edict_t *ENT(const entvars_t *pev)	{ return DBG_EntOfVars(pev); }
+#else
+	inline edict_t *ENT(const entvars_t *pev)	{ return pev->pContainingEntity; }
+#endif
 inline edict_t *ENT(edict_t *pent)		{ return pent; }
 inline edict_t *ENT(EOFFSET eoffset)			{ return (*g_engfuncs.pfnPEntityOfEntOffset)(eoffset); }
 inline EOFFSET OFFSET(EOFFSET eoffset)			{ return eoffset; }
 inline EOFFSET OFFSET(const edict_t *pent)	
 { 
+#if _DEBUG
+	if ( !pent )
+		ALERT( at_error, "Bad ent in OFFSET()\n" );
+#endif
 	return (*g_engfuncs.pfnEntOffsetOfPEntity)(pent); 
 }
 inline EOFFSET OFFSET(entvars_t *pev)				
 { 
+#if _DEBUG
+	if ( !pev )
+		ALERT( at_error, "Bad pev in OFFSET()\n" );
+#endif
 	return OFFSET(ENT(pev)); 
 }
 inline entvars_t *VARS(entvars_t *pev)					{ return pev; }
@@ -128,6 +140,7 @@ inline entvars_t* VARS(EOFFSET eoffset)				{ return VARS(ENT(eoffset)); }
 inline int	  ENTINDEX(edict_t *pEdict)			{ return (*g_engfuncs.pfnIndexOfEdict)(pEdict); }
 inline edict_t* INDEXENT( int iEdictNum )		{ return (*g_engfuncs.pfnPEntityOfEntIndex)(iEdictNum); }
 inline void MESSAGE_BEGIN( int msg_dest, int msg_type, const float *pOrigin, entvars_t *ent ) {
+//	ALERT(at_console, "%i dest %i type\n", msg_dest, msg_type);
 	(*g_engfuncs.pfnMessageBegin)(msg_dest, msg_type, pOrigin, ENT(ent));
 }
 
@@ -338,9 +351,15 @@ extern int BuildChangeList( LEVELLIST *pLevelList, int maxList );
 
 //
 // How did I ever live without ASSERT?
-
+//
+#ifdef	DEBUG
+void DBG_AssertFunction(BOOL fExpr, const char* szExpr, const char* szFile, int szLine, const char* szMessage);
+#define ASSERT(f)		DBG_AssertFunction(f, #f, __FILE__, __LINE__, NULL)
+#define ASSERTSZ(f, sz)	DBG_AssertFunction(f, #f, __FILE__, __LINE__, sz)
+#else	// !DEBUG
 #define ASSERT(f)
 #define ASSERTSZ(f, sz)
+#endif	// !DEBUG
 
 
 extern DLL_GLOBAL const Vector g_vecZero;

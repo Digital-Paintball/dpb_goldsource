@@ -28,7 +28,8 @@
 #include <math.h>   // sqrt
 #include <string.h> // strcpy
 #include <stdlib.h> // atoi
-//#include <ctype.h>  // isspace
+//Tony; i thought i already saved this..
+#include <ctype.h>  // isspace
 
 #ifdef CLIENT_DLL
 	// Spectator Mode
@@ -44,41 +45,6 @@ static int pm_shared_initialized = 0;
 
 playermove_t *pmove = NULL;
 
-/*
-typedef enum
-{
-	mod_brush, 
-	mod_sprite, 
-	mod_alias, 
-	mod_studio
-} modtype_t;
-
-typedef struct
-{
-  int     planenum;
-  short   children[2];  // negative numbers are contents
-} dclipnode_t;
-
-
-typedetruct hull_s
-{
-	dclipnode_t *clipnodes;
-	mplane_t  *planes;
-	int     firstclipnode;
-	int     lastclipnode;
-	vec3_t    clip_mins;
-	vec3_t    clip_maxs;
-} hull_t;
-
-mplane_s
-{
-	vec3_t	normal;			// surface normal
-	float	dist;			// closest appoach to origin
-	byte	type;			// for texture axis selection and fast side tests
-	byte	signbits;		// signx + signy<<1 + signz<<1
-	byte	pad[2];
-} mplane_t;
-*/
 // Ducking time
 
 #define VEC_PRONE_VIEW -10
@@ -1952,7 +1918,6 @@ void PM_FixPlayerCrouchStuck( int direction )
 
 void PM_UnProne( void )
 {
-	int i;
 	pmtrace_t trace;
 	vec3_t newOrigin;
 	float f;
@@ -1990,7 +1955,6 @@ void PM_UnProne( void )
 
 void PM_Prone( void )
 {
-	int i;
 	float time;
 	float proneFraction;
 	float fMore;
@@ -2078,7 +2042,6 @@ void PM_Prone( void )
 
 void PM_UnDuck( void )
 {
-	int i;
 	pmtrace_t trace;
 	vec3_t newOrigin;
 	float f;
@@ -2115,7 +2078,6 @@ void PM_UnDuck( void )
 
 void PM_Duck( void )
 {
-	int i;
 	float time;
 	float f,fMore;
 	int buttonsChanged	= ( pmove->oldbuttons ^ pmove->cmd.buttons );	// These buttons have changed this frame
@@ -2580,7 +2542,6 @@ PM_Jump
 */
 void PM_Jump (void)
 {
-	int i;
 	qboolean tfc = false;
 
 	qboolean cansuperjump = false;
@@ -3389,7 +3350,109 @@ void PM_CreateStuckTable( void )
 	}
 }
 
+int g_model_hulls_fixed = 0;
+#define WORLD_HULL_POINT    0
+#define WORLD_HULL_STAND    1
+#define WORLD_HULL_CROUCH    3
+#define WORLD_HULL_PRONE    2
+#define PLAYER_HULL_POINT   2
+#define PLAYER_HULL_STAND   0
+#define PLAYER_HULL_CROUCH   1
+#define PLAYER_HULL_PRONE   3
+#if 0
+vec3_t player_mins[4] = {
+	{ -16, -16, -36 },
+	{ -16, -16, -18 },
+	{   0,   0,   0 },
+	{ -64, -64, -32 }
+};
 
+vec3_t player_maxs[4] = {
+	{ 16, 16, 36 },
+	{ 16, 16, 30 },
+	{  0,  0,  0 },
+	{ 64, 64, -16 }
+};
+#endif
+//comment for tutorial: HULL_STAND is normal player, HULL_CROUCH is player ducking, and HULL_PRONE is the old LARGE Hull
+//omega - clipbox update
+void PM_UpdateClipBox( void )
+{
+    vec3_t POINT_MIN;    vec3_t POINT_MAX;
+	vec3_t STAND_MIN;    vec3_t STAND_MAX;
+    vec3_t CROUCH_MIN;    vec3_t CROUCH_MAX;
+    vec3_t PRONE_MIN;    vec3_t PRONE_MAX;
+
+	POINT_MIN[0] = POINT_MIN[1] = POINT_MIN[2] = 0;
+    POINT_MAX[0] = POINT_MAX[1] = POINT_MAX[2] = 0;
+    STAND_MIN[0] = -16;  STAND_MIN[1] = -16;  STAND_MIN[2] = -36;
+    STAND_MAX[0] = 16;   STAND_MAX[1] = 16;   STAND_MAX[2] = 36;
+    CROUCH_MIN[0] = -16;  CROUCH_MIN[1] = -16;  CROUCH_MIN[2] = -18;
+    CROUCH_MAX[0] = 16;   CROUCH_MAX[1] = 16;   CROUCH_MAX[2] = 30;
+    PRONE_MIN[0] = -64; PRONE_MIN[1] = -64; PRONE_MIN[2] = -32;
+    PRONE_MAX[0] = 64;  PRONE_MAX[1] = 64;  PRONE_MAX[2] = -16;
+   
+    VectorCopy(POINT_MIN, pmove->player_mins[PLAYER_HULL_POINT]);//override point  
+    VectorCopy(POINT_MAX, pmove->player_maxs[PLAYER_HULL_POINT]);//i detect an error!  
+    VectorCopy(STAND_MIN, pmove->player_mins[PLAYER_HULL_STAND]);//girls/boys-mins  
+    VectorCopy(STAND_MAX, pmove->player_maxs[PLAYER_HULL_STAND]);//girls/boys-maxs  
+    VectorCopy(CROUCH_MIN, pmove->player_mins[PLAYER_HULL_CROUCH]);//adults-mins  
+    VectorCopy(CROUCH_MAX, pmove->player_maxs[PLAYER_HULL_CROUCH]);//adults-maxs  
+    VectorCopy(PRONE_MIN, pmove->player_mins[PLAYER_HULL_PRONE]);//melee-mins  
+    VectorCopy(PRONE_MAX, pmove->player_maxs[PLAYER_HULL_PRONE]);//melee-maxs
+}
+//rescale fixes
+model_t * g_modelarray = NULL;
+void PM_FixModelHulls()
+{  
+    int model;
+   
+    vec3_t POINT_MIN;    vec3_t POINT_MAX;
+	vec3_t STAND_MIN;    vec3_t STAND_MAX;
+    vec3_t CROUCH_MIN;    vec3_t CROUCH_MAX;
+    vec3_t PRONE_MIN;    vec3_t PRONE_MAX;
+
+	POINT_MIN[0] = POINT_MIN[1] = POINT_MIN[2] = 0;
+    POINT_MAX[0] = POINT_MAX[1] = POINT_MAX[2] = 0;
+    STAND_MIN[0] = -16;  STAND_MIN[1] = -16;  STAND_MIN[2] = -36;
+    STAND_MAX[0] = 16;   STAND_MAX[1] = 16;   STAND_MAX[2] = 36;
+    CROUCH_MIN[0] = -16;  CROUCH_MIN[1] = -16;  CROUCH_MIN[2] = -18;
+    CROUCH_MAX[0] = 16;   CROUCH_MAX[1] = 16;   CROUCH_MAX[2] = 30;
+    PRONE_MIN[0] = -64; PRONE_MIN[1] = -64; PRONE_MIN[2] = -32;
+    PRONE_MAX[0] = 64;  PRONE_MAX[1] = 64;  PRONE_MAX[2] = -16;
+   
+    // Special case for the world model, since its name doesn't start with '*'  
+    // It is only the first element of the models array for the first map.  
+    // It is always pmove->physent[0], though  
+    if (!g_modelarray)
+        g_modelarray = pmove->physents[0].model;
+
+
+    VectorCopy(POINT_MIN, pmove->physents[0].model->hulls[WORLD_HULL_POINT].clip_mins); //override point  
+    VectorCopy(POINT_MAX, pmove->physents[0].model->hulls[WORLD_HULL_POINT].clip_maxs); //i detect an error  
+    VectorCopy(STAND_MIN, pmove->physents[0].model->hulls[WORLD_HULL_STAND].clip_mins); //girls/boys-mins  
+    VectorCopy(STAND_MAX, pmove->physents[0].model->hulls[WORLD_HULL_STAND].clip_maxs); //girls/boys-maxs  
+    VectorCopy(CROUCH_MIN, pmove->physents[0].model->hulls[WORLD_HULL_CROUCH].clip_mins); //adults-mins  
+    VectorCopy(CROUCH_MAX, pmove->physents[0].model->hulls[WORLD_HULL_CROUCH].clip_maxs); //adults-maxs  
+    VectorCopy(PRONE_MIN, pmove->physents[0].model->hulls[WORLD_HULL_PRONE].clip_mins); //melee-mins  
+    VectorCopy(PRONE_MAX, pmove->physents[0].model->hulls[WORLD_HULL_PRONE].clip_maxs); //melee-maxs    
+   
+    // All the BSP models other than the world have names in the format "*%d"  
+    // Max # of models (of all types) assumed to be 512  for (model = 0; model < 1024; model++)
+    {  
+        if (pmove->physents[0].model[model].name[0] == '*')  
+        {
+            VectorCopy(POINT_MIN, g_modelarray[model].hulls[WORLD_HULL_POINT].clip_mins);//override point        
+            VectorCopy(POINT_MAX, g_modelarray[model].hulls[WORLD_HULL_POINT].clip_maxs);//i detect an error        
+            VectorCopy(STAND_MIN, g_modelarray[model].hulls[WORLD_HULL_STAND].clip_mins);//girls/boys-mins        
+            VectorCopy(STAND_MAX, g_modelarray[model].hulls[WORLD_HULL_STAND].clip_maxs);//girls/boys-maxs        
+            VectorCopy(CROUCH_MIN, g_modelarray[model].hulls[WORLD_HULL_CROUCH].clip_mins);//adults-mins        
+            VectorCopy(CROUCH_MAX, g_modelarray[model].hulls[WORLD_HULL_CROUCH].clip_maxs);//adults-maxs        
+            VectorCopy(PRONE_MIN, g_modelarray[model].hulls[WORLD_HULL_PRONE].clip_mins);//melee-mins        
+            VectorCopy(PRONE_MAX, g_modelarray[model].hulls[WORLD_HULL_PRONE].clip_maxs);//melee-maxs  
+        }
+    }
+}
 
 /*
 This modume implements the shared player physics code between any particular game and 
@@ -3402,7 +3465,7 @@ void PM_Move ( struct playermove_s *ppmove, int server )
 {
 	int i,j;
 	pmove = ppmove;
-	if(pmove->physents[0].model[0].hulls[3].clip_maxs[2]!=30.0
+/*	if(pmove->physents[0].model[0].hulls[3].clip_maxs[2]!=30.0
 		|| pmove->player_maxs[1][2]!=30.0) {
 		for(i=0;i<4;i++) {  
 			VectorCopy(player_mins[i],pmove->player_mins[i]);
@@ -3414,7 +3477,14 @@ void PM_Move ( struct playermove_s *ppmove, int server )
 						pmove->physents[0].model[j].hulls[world_shuffle[i]].clip_maxs);
 			}
 		}
-	}
+	}*/
+    //omega clipbox update  
+    PM_UpdateClipBox();
+    if (!g_model_hulls_fixed)  
+    {  
+        PM_FixModelHulls();
+        g_model_hulls_fixed = 1;
+    } 
 	PM_PlayerMove( ( server != 0 ) ? true : false );
 	if ( pmove->onground != -1 )
 	{
@@ -3452,7 +3522,6 @@ int PM_GetPhysEntInfo( int ent )
 
 void PM_Init( struct playermove_s *ppmove )
 {
-	int i;
 	pmove = ppmove;
 	PM_CreateStuckTable();
 	PM_InitTextureTypes();

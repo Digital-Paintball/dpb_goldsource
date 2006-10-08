@@ -14,6 +14,9 @@
 ****/
 #if !defined ( BEAMDEFH )
 #define BEAMDEFH
+#ifdef _WIN32
+#pragma once
+#endif
 
 #define FBEAM_STARTENTITY		0x00000001
 #define FBEAM_ENDENTITY			0x00000002

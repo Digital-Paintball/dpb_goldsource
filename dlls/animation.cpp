@@ -65,7 +65,8 @@ void SV_StudioSetupBones(struct model_s *pMode, float frame, int sequence, const
 sv_blending_interface_t svBlending = 
 {
 	SV_BLENDING_INTERFACE_VERSION,
-	&SV_StudioSetupBones
+	//&
+	SV_StudioSetupBones
 };
 
 server_studio_api_t IEngineStudio;
