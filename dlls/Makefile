@@ -4,7 +4,7 @@ CFLAGS = -I../dlls -I../pm_shared -I../engine -I../common -I../game_shared
 all:
 	@echo "need a target: pb_i686.so pb.dll"
 pb.dll: ${OFS}
-	${CPP} -mno-cygwin  -shared  -Wl,--kill-at -o pb.dll ${OFS}
+	${CPP} -shared  -Wl,--kill-at -o pb.dll ${OFS}
 	strip -s pb.dll
 pb_i686.so: ${OFS} pb.map
 	${CPP} -shared -Wl,--version-script=pb.map -o pb_i686.so -static-libgcc -L. ${OFS}

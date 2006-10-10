@@ -1,4 +1,5 @@
 #include<stdio.h>
+#include<algorithm>
 #include"extdll.h"
 #include"util.h"
 #include"player.h"
