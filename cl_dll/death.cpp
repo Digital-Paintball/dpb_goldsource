@@ -113,8 +113,10 @@ int CHudDeath::Draw(float flTime) {
 	for(int i=0;i<lines;i++) {
 		if(g_PlayerInfoList[deaths[i].victim].name) {
 			gEngfuncs.pfnDrawConsoleStringLen(g_PlayerInfoList[deaths[i].victim].name,&vic,&y);
-			if(deaths[0].weapon>=0) {
-				if(g_PlayerInfoList[deaths[0].killer].name) {
+			if(deaths[0].weapon>=0) 
+			{
+				if(g_PlayerInfoList[deaths[0].killer].name) 
+				{
 					gEngfuncs.pfnDrawConsoleStringLen(g_PlayerInfoList[deaths[i].victim].name,&vic,&y);
 					gEngfuncs.pfnDrawConsoleStringLen(g_PlayerInfoList[deaths[i].killer].name,&kil,&y);
 					y=g_PlayerExtraInfo[deaths[i].killer].teamnumber;
@@ -123,14 +125,19 @@ int CHudDeath::Draw(float flTime) {
 					y=g_PlayerExtraInfo[deaths[i].victim].teamnumber;
 					gEngfuncs.pfnDrawSetTextColor(say_colors[y][0],say_colors[y][1],say_colors[y][2]);
 					gEngfuncs.pfnDrawConsoleString(ScreenWidth-5-vic,YRES(32)+5+i*20,g_PlayerInfoList[deaths[i].victim].name);
+
 					SPR_Set(death,255,255,255);			
 					area.top=(deaths[i].weapon%12)*20;
 					area.bottom=area.top+20;
-					area.left=deaths[i].weapon>7?40:0;
+
+					area.left=deaths[i].weapon>11?40:0;
 					area.right=area.left+40;
 					SPR_DrawHoles(0,ScreenWidth-vic-50,YRES(32)+5+i*20,&area);
+				
 				}
-			} else {
+			} 
+			else 
+			{
 				gEngfuncs.pfnDrawConsoleStringLen(g_PlayerInfoList[deaths[i].victim].name,&vic,&y);
 				y=g_PlayerExtraInfo[deaths[i].victim].teamnumber;
 				gEngfuncs.pfnDrawSetTextColor(say_colors[y][0],say_colors[y][1],say_colors[y][2]);

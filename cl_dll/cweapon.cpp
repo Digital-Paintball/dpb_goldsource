@@ -57,6 +57,7 @@ void ClientWeapon::DefReload(int aidle,int abegin)
 		m_flReload=10.0f;
 	}
 }
+#define W_CPS (((1.0f/(l_currAttack-l_lastAttack))+(1.0f/(l_lastAttack-l_prevAttack)))/2)
 void ClientWeapon::Frame(double dt)
 {
 	if(g_Buttons & IN_DASH&&!m_bGunDown) {
@@ -70,12 +71,30 @@ void ClientWeapon::Frame(double dt)
 	if((g_Buttons & IN_RELOAD) && m_flReload<=0 && gHUD.m_Hopper.m_iHopper<200 && gHUD.m_Hopper.m_iTube )
 		Reload();
 	else if(gHUD.m_Timer.m_RoundState&&(g_Buttons & IN_ATTACK ) && (!(g_Buttons&IN_RELOAD)) && m_flPrimaryAttack<=0  && m_bPrimaryAttack && gHUD.m_Hopper.m_iHopper>0)
+	{
+		l_prevAttack=l_lastAttack;
+		l_lastAttack=l_currAttack; 
+		l_currAttack=gEngfuncs.GetClientTime();
 		PrimaryAttack();
+		if (W_CPS>5)
+		{
+			float decAmmt = 0.01 * W_CPS;
+			if (decAmmt > 0.15)
+				decAmmt = 0.15;
+
+			m_flPrimaryAttack-=decAmmt;
+		}
+	}
 	else if(gHUD.m_Timer.m_RoundState&&(g_Buttons & IN_ATTACK2) && (!(g_Buttons&IN_RELOAD)) && m_flSecondaryAttack<=0 && m_bSecondaryAttack)
 		SecondaryAttack();
 	else if(m_flIdle<=0 && (!(g_Buttons&(IN_ATTACK |IN_ATTACK2))&& 
 		((!(g_Buttons&IN_RELOAD)) || gHUD.m_Hopper.m_iHopper==200|| !gHUD.m_Hopper.m_iTube )))
+	{
 		Idle();
+		l_prevAttack = 0.0;
+		l_lastAttack = 0.0;
+		l_currAttack = 0.0;
+	}
 	m_flPrimaryAttack-=dt;
 	m_flSecondaryAttack-=dt;
 	m_flIdle-=dt;

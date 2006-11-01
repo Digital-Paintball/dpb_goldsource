@@ -133,17 +133,35 @@ void CPaintballGun::IdleHandleReload()
 	}
 }
 
-
+#define W_CPS (((1.0f/(l_currAttack-l_lastAttack))+(1.0f/(l_lastAttack-l_prevAttack)))/2)
 void CPaintballGun::WeaponPostThink()
 {
 	if( (player->pev->button & IN_RELOAD) && m_flReload<=0 && m_iHopper<200&& player->m_iTube)
 		Reload();
 	else if(gRules->m_RoundState && (player->pev->button & IN_ATTACK ) && (!(player->pev->button&IN_RELOAD))  && m_flPrimaryAttack<=0 && m_bPrimaryAttack && m_iHopper>0)
+	{
+		l_prevAttack=l_lastAttack;
+		l_lastAttack=l_currAttack; 
+		l_currAttack=gpGlobals->time;
 		PrimaryAttack();
+		if (W_CPS>5)
+		{
+			float decAmmt = 0.01 * W_CPS;
+			if (decAmmt > 0.15)
+				decAmmt = 0.15;
+
+			m_flPrimaryAttack-=decAmmt;
+		}
+	}
 	else if(gRules->m_RoundState && (player->pev->button & IN_ATTACK2) && (!(player->pev->button&IN_RELOAD)) && m_flSecondaryAttack<=0 && m_bSecondaryAttack )
 		SecondaryAttack();
 	else if(m_flIdle<=0.0 && (!(player->pev->button&(IN_ATTACK|IN_ATTACK2))) && ((!(player->pev->button&IN_RELOAD))||m_iHopper==200||!player->m_iTube))
+	{
 		Idle();
+		l_prevAttack = 0.0;
+		l_lastAttack = 0.0;
+		l_currAttack = 0.0;
+	}
 	m_flPrimaryAttack-=gpGlobals->frametime;
 	m_flSecondaryAttack-=gpGlobals->frametime;
 	m_flIdle-=gpGlobals->frametime;

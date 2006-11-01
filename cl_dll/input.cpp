@@ -42,7 +42,6 @@ extern "C"
 extern int g_iAlive;
 
 bool g_bAttackOK = false; // kuja, new variables
-bool g_bAgain = false; // kuja - should I bounce (shoot twice?)
 float l_prevAttack = 0.0;
 float l_lastAttack = 0.0;
 float l_currAttack = 0.0;
@@ -534,20 +533,15 @@ void IN_AttackDown(void)
 {
 	if (!g_bAttackOK) // kuja - real antiscripting
 		return;
-	g_bAgain=false;
+
 	l_prevAttack=l_lastAttack; // kuja - anti haxx0zring
 	l_lastAttack=l_currAttack; 
 	l_currAttack=gEngfuncs.GetClientTime();
-	gEngfuncs.Con_DPrintf("real cps: %.1f\n",((1.0f/(l_currAttack-l_lastAttack))+(1.0f/(l_lastAttack-l_prevAttack)))/2);
-	if ((((1.0f/(l_currAttack-l_lastAttack))+(1.0f/(l_lastAttack-l_prevAttack)))/2)>17) // ahxxzoring
+	gEngfuncs.Con_DPrintf("cps: %.1f\n",((1.0f/(l_currAttack-l_lastAttack))+(1.0f/(l_lastAttack-l_prevAttack)))/2);
+	if ((((1.0f/(l_currAttack-l_lastAttack))+(1.0f/(l_lastAttack-l_prevAttack)))/2)>22) // ahxxzoring
 		return;
 	KeyDown( &in_attack );
 	gHUD.m_Spectator.HandleButtonsDown( IN_ATTACK );
-	if (((((1.0f/(l_currAttack-l_lastAttack))+(1.0f/(l_lastAttack-l_prevAttack)))/2)>6.5)&&((((1.0f/(l_currAttack-l_lastAttack))+(1.0f/(l_lastAttack-l_prevAttack)))/2)<12))  // clixzzoring
-	{	
-		gEngfuncs.Con_DPrintf("bounced!\n");
-		g_bAgain=true;
-	}
 }
 
 void IN_AttackUp(void)

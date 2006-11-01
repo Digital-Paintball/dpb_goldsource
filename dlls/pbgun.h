@@ -34,6 +34,10 @@ public:
 	int m_bSecondaryAttack;
 	int m_iHopper;
 	CBasePlayer *player;
+
+	float l_prevAttack;
+	float l_lastAttack;
+	float l_currAttack;
 };
 
 class CAngel: public CPaintballGun

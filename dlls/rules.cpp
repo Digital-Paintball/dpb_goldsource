@@ -1,5 +1,4 @@
 #include<stdio.h>
-#include<algorithm>
 #include"extdll.h"
 #include"util.h"
 #include"player.h"
@@ -755,7 +754,7 @@ void CRules::Frame()
 
 	if(m_bPrestart) 
 	{
-		if (m_flRoundTime < gpGlobals->time)
+		if(((int)(m_flRoundTime-gpGlobals->time))<=0)
 			UTIL_ClientPrintAll(HUD_PRINTCENTER,"Warm-up time over");
 	}
 
@@ -764,10 +763,10 @@ void CRules::Frame()
 		damageDisabled = true; //can't take damage when this is set; prevents killing during freeze time, or whatever.
 		//Tony; re-worked to check to start a round, based on number of players; no point in starting
 		//a round if there are no players on it!!
-		if(m_flRoundTime <= gpGlobals->time)
+		if(gpGlobals->time>=m_flRoundTime)
 		{
-#if 0
 			CBasePlayer *plr;
+#if 0
 			int numRed = 0, numBlue = 0; //has to be at least one on each team before the round goes out of freeze time.
 			//since player's are eliminated cuasing wins, there has to be a team before it can be either a draw
 			//or an opposing team win.
@@ -788,6 +787,15 @@ void CRules::Frame()
 			if (numRed > 0 && numBlue > 0)
 			{
 #endif
+				for(int i=1;i<=gpGlobals->maxClients;i++)
+				{
+					plr=(CBasePlayer*)UTIL_PlayerByIndex(i);
+					if(plr&&plr->pev->team!=TEAM_SPEC)
+					{
+						g_engfuncs.pfnSetClientMaxspeed(plr->edict(),1000);
+						plr->pev->takedamage=DAMAGE_YES;
+					}
+				}
 				m_flRoundTime=gpGlobals->time+mp_roundtime.value;
 				m_RoundState=ROUND_ACTIVE;
 				//start round
@@ -886,7 +894,7 @@ void CRules::Frame()
 					MESSAGE_BEGIN( MSG_ONE, gmsgNewRound, NULL, plr->pev );
 					MESSAGE_END();
 
-					g_engfuncs.pfnSetClientMaxspeed(plr->edict(),1000.0f);
+					g_engfuncs.pfnSetClientMaxspeed(plr->edict(),0.00001);
 				}
 			}
 			if(m_bPrestart) 
@@ -960,6 +968,16 @@ void CRules::ChangeTeam(CBasePlayer *plr,int team)
 		{
 			plr->StopSpectating();
 			plr->Spawn();
+			if(m_RoundState==ROUND_FREEZE)
+			{
+				g_engfuncs.pfnSetClientMaxspeed(plr->edict(),0.00001);
+				plr->pev->takedamage=DAMAGE_NO;
+			}
+			else
+			{
+				plr->pev->takedamage=DAMAGE_YES;
+				g_engfuncs.pfnSetClientMaxspeed(plr->edict(),1000.0f);
+			}
 		}
 		else if ( !plr->pev->deadflag )
 		{

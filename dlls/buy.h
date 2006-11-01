@@ -37,80 +37,80 @@
 
 
 #define WEAPON_ANGEL			0
-#define ANGEL_ROF	15.6
+#define ANGEL_ROF	18.6
 #define ANGEL_ACC	8.0
 
 #define WEAPON_EXCAL			1
-#define EXCAL_ROF	13.7
+#define EXCAL_ROF	15.7
 #define EXCAL_ACC	6.0
 
 #define WEAPON_SPYDER			2
-#define SPYDER_ROF	6.5
+#define SPYDER_ROF	8.5
 #define SPYDER_ACC	14.0
 
 #define WEAPON_SL68			3
-#define SL68_ROF	1.95
+#define SL68_ROF	3.95
 #define SL68_ACC	2.0
 
 #define WEAPON_MAG			4
-#define MAG_ROF		9.1
+#define MAG_ROF		11.1
 #define MAG_ACC		13.0
 
 
 #define WEAPON_COCKER			5
-#define COCKER_ROF	7.8
+#define COCKER_ROF	9.8
 #define COCKER_ACC	4.0
 
 #define WEAPON_BUSH			6
-#define BUSH_ROF	13.0
+#define BUSH_ROF	15.0
 #define BUSH_ACC	10.0
 
 #define WEAPON_M98			7
-#define M98_ROF		5.2
+#define M98_ROF		7.2
 #define M98_ACC		15.0
 
 #define WEAPON_PHANTOM			8
-#define PHANTOM_ROF	2.6
+#define PHANTOM_ROF	4.6
 #define PHANTOM_ACC	1.0
 
 #define WEAPON_SHOCKER			9
-#define SHOCKER_ROF	10.5
+#define SHOCKER_ROF	12.5
 #define SHOCKER_ACC	5.0
 
 #define WEAPON_EMAG			10
-#define EMAG_ROF 	11.5
+#define EMAG_ROF 	13.5
 #define EMAG_ACC 	12.0
 
 #define WEAPON_ORRACLE			11
-#define ORRACLE_ROF 	13.6
+#define ORRACLE_ROF 	15.6
 #define ORRACLE_ACC 	3.0
 
 #define WEAPON_TIMMY			12
-#define TIMMY_ROF 	18.0
+#define TIMMY_ROF 	20.0
 #define TIMMY_ACC 	9.0
 
 #define WEAPON_MATRIX			13
-#define MATRIX_ROF	14.3
+#define MATRIX_ROF	16.3
 #define MATRIX_ACC	7.0
 
 #define WEAPON_IMPULSE			14
-#define IMPULSE_ROF	11.7
+#define IMPULSE_ROF	13.7
 #define IMPULSE_ACC	11.0
 
 #define WEAPON_DM4			15
-#define DM4_ROF		16.2
+#define DM4_ROF		18.2
 #define DM4_ACC		3.5
 
 #define WEAPON_OMEN			16
-#define OMEN_ROF		9.75
+#define OMEN_ROF	11.75
 #define OMEN_ACC		5.5
 
 #define WEAPON_A5			17
-#define A5_ROF		8.45
+#define A5_ROF		10.45
 #define A5_ACC		4.5
 
 #define WEAPON_BLAZER	18
-#define BLAZER_ROF	9.75
+#define BLAZER_ROF	11.75
 #define BLAZER_ACC	5.0
 
 #define WEAPON_MAX		19

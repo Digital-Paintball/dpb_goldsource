@@ -9,7 +9,12 @@ void CL_PunchAxes(float f);
 class ClientWeapon
 {
 public:
-	ClientWeapon(){ m_flIdle=m_flPrimaryAttack=m_flSecondaryAttack=m_flReload=0.0f; m_iReload=0;m_bPrimaryAttack=m_bSecondaryAttack=1;}
+	ClientWeapon()
+	{ m_flIdle=m_flPrimaryAttack=m_flSecondaryAttack=m_flReload=0.0f; m_iReload=0;m_bPrimaryAttack=m_bSecondaryAttack=1;
+		l_prevAttack = 0.0;
+		l_lastAttack = 0.0;
+		l_currAttack = 0.0;
+	}
 	virtual void PrimaryAttack();
 	virtual void SecondaryAttack();
 	virtual void Idle();
@@ -29,6 +34,9 @@ public:
 	int m_iReload;
 	int m_bPrimaryAttack;
 	int m_bSecondaryAttack;
+	float l_prevAttack;
+	float l_lastAttack;
+	float l_currAttack;
 
 };
 class CM98: public ClientWeapon
