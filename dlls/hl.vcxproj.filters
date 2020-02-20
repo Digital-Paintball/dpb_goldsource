@@ -20,9 +20,6 @@
       <UniqueIdentifier>{6188beee-6f71-4e81-9c93-eb2d8b264846}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl;fi;fd</Extensions>
     </Filter>
-    <Filter Include="TEXT">
-      <UniqueIdentifier>{a47af6ab-3891-46ef-8ed4-0b98a7b8088b}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{28dc6c36-8b49-4d4b-98ba-64542288a0c7}</UniqueIdentifier>
       <Extensions>ico;cur;bmp;dlg;rc2;rct;bin;cnt;rtf;gif;jpg;jpeg;jpe</Extensions>
