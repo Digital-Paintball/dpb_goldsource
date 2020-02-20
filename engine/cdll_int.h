@@ -34,7 +34,7 @@ extern "C" {
 // this file is included by both the engine and the client-dll,
 // so make sure engine declarations aren't done twice
 
-typedef int HSPRITE;	// handle to a graphic
+typedef int HSPRITEZ;	// handle to a graphic
 
 #define SCRINFO_SCREENFLASH 1
 #define SCRINFO_STRETCHED	2
@@ -90,11 +90,11 @@ typedef struct hud_player_info_s
 typedef struct cl_enginefuncs_s
 {
 	// sprite handlers
-	HSPRITE						( *pfnSPR_Load )			( const char *szPicName );
-	int							( *pfnSPR_Frames )			( HSPRITE hPic );
-	int							( *pfnSPR_Height )			( HSPRITE hPic, int frame );
-	int							( *pfnSPR_Width )			( HSPRITE hPic, int frame );
-	void						( *pfnSPR_Set )				( HSPRITE hPic, int r, int g, int b );
+	HSPRITEZ						( *pfnSPR_Load )			( const char *szPicName );
+	int							( *pfnSPR_Frames )			( HSPRITEZ hPic );
+	int							( *pfnSPR_Height )			( HSPRITEZ hPic, int frame );
+	int							( *pfnSPR_Width )			( HSPRITEZ hPic, int frame );
+	void						( *pfnSPR_Set )				( HSPRITEZ hPic, int r, int g, int b );
 	void						( *pfnSPR_Draw )			( int frame, int x, int y, const wrect_t *prc );
 	void						( *pfnSPR_DrawHoles )		( int frame, int x, int y, const wrect_t *prc );
 	void						( *pfnSPR_DrawAdditive )	( int frame, int x, int y, const wrect_t *prc );
@@ -105,7 +105,7 @@ typedef struct cl_enginefuncs_s
 	// screen handlers
 	void						( *pfnFillRGBA )			( int x, int y, int width, int height, int r, int g, int b, int a );
 	int							( *pfnGetScreenInfo ) 		( SCREENINFO *pscrinfo );
-	void						( *pfnSetCrosshair )		( HSPRITE hspr, wrect_t rc, int r, int g, int b );
+	void						( *pfnSetCrosshair )		( HSPRITEZ hspr, wrect_t rc, int r, int g, int b );
 
 	// cvar handlers
 	struct cvar_s				*( *pfnRegisterVariable )	( char *szName, char *szValue, int flags );
@@ -176,7 +176,7 @@ typedef struct cl_enginefuncs_s
 	struct model_s				*( *CL_LoadModel )			( const char *modelname, int *index );
 	int							( *CL_CreateVisibleEntity )	( int type, struct cl_entity_s *ent );
 
-	const struct model_s *		( *GetSpritePointer )		( HSPRITE hSprite );
+	const struct model_s *		( *GetSpritePointer )		( HSPRITEZ hSprite );
 	void						( *pfnPlaySoundByNameAtLocation )	( char *szSound, float volume, float *origin );
 
 	unsigned short				( *pfnPrecacheEvent )		( int type, const char* psz );

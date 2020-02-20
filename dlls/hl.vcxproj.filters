@@ -1,0 +1,338 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{9377f5c3-00e8-410c-aabc-6c4042eb93db}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat;for;f90</Extensions>
+    </Filter>
+    <Filter Include="Source Files\WEAPONS">
+      <UniqueIdentifier>{c3bc4c9f-7bd9-421b-83cb-240736645307}</UniqueIdentifier>
+      <Extensions>.cpp,.h</Extensions>
+    </Filter>
+    <Filter Include="Source Files\MONSTERS">
+      <UniqueIdentifier>{a490bc5c-e5f9-4e1e-9471-251160730681}</UniqueIdentifier>
+      <Extensions>.cpp,.h</Extensions>
+    </Filter>
+    <Filter Include="Source Files\PLAYER_PHYSICS">
+      <UniqueIdentifier>{85699e14-70c4-4d96-bddf-b60fa7e29cd7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{6188beee-6f71-4e81-9c93-eb2d8b264846}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;fi;fd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{28dc6c36-8b49-4d4b-98ba-64542288a0c7}</UniqueIdentifier>
+      <Extensions>ico;cur;bmp;dlg;rc2;rct;bin;cnt;rtf;gif;jpg;jpeg;jpe</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="animating.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="animation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bmodels.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="buttons.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="buy.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cbase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="client.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="combat.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="doors.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="effects.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="explode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="func_break.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="func_tank.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="game.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="globals.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="h_cycler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="h_export.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lights.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mortar.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mpstubb.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="object.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pathcorner.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="plane.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="plats.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="player.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="random.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rules.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sound.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="soundent.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="spectator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="studio_util.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="subs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="triggers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="util.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\game_shared\voice_gamemgr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="world.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="a5.cpp">
+      <Filter>Source Files\WEAPONS</Filter>
+    </ClCompile>
+    <ClCompile Include="angel.cpp">
+      <Filter>Source Files\WEAPONS</Filter>
+    </ClCompile>
+    <ClCompile Include="blazer.cpp">
+      <Filter>Source Files\WEAPONS</Filter>
+    </ClCompile>
+    <ClCompile Include="bush.cpp">
+      <Filter>Source Files\WEAPONS</Filter>
+    </ClCompile>
+    <ClCompile Include="cocker.cpp">
+      <Filter>Source Files\WEAPONS</Filter>
+    </ClCompile>
+    <ClCompile Include="dm4.cpp">
+      <Filter>Source Files\WEAPONS</Filter>
+    </ClCompile>
+    <ClCompile Include="emag.cpp">
+      <Filter>Source Files\WEAPONS</Filter>
+    </ClCompile>
+    <ClCompile Include="excal.cpp">
+      <Filter>Source Files\WEAPONS</Filter>
+    </ClCompile>
+    <ClCompile Include="impulse.cpp">
+      <Filter>Source Files\WEAPONS</Filter>
+    </ClCompile>
+    <ClCompile Include="m98.cpp">
+      <Filter>Source Files\WEAPONS</Filter>
+    </ClCompile>
+    <ClCompile Include="mag.cpp">
+      <Filter>Source Files\WEAPONS</Filter>
+    </ClCompile>
+    <ClCompile Include="matrix.cpp">
+      <Filter>Source Files\WEAPONS</Filter>
+    </ClCompile>
+    <ClCompile Include="omen.cpp">
+      <Filter>Source Files\WEAPONS</Filter>
+    </ClCompile>
+    <ClCompile Include="orracle.cpp">
+      <Filter>Source Files\WEAPONS</Filter>
+    </ClCompile>
+    <ClCompile Include="paintball.cpp">
+      <Filter>Source Files\WEAPONS</Filter>
+    </ClCompile>
+    <ClCompile Include="pbgun.cpp">
+      <Filter>Source Files\WEAPONS</Filter>
+    </ClCompile>
+    <ClCompile Include="phantom.cpp">
+      <Filter>Source Files\WEAPONS</Filter>
+    </ClCompile>
+    <ClCompile Include="shocker.cpp">
+      <Filter>Source Files\WEAPONS</Filter>
+    </ClCompile>
+    <ClCompile Include="sl68.cpp">
+      <Filter>Source Files\WEAPONS</Filter>
+    </ClCompile>
+    <ClCompile Include="spyder.cpp">
+      <Filter>Source Files\WEAPONS</Filter>
+    </ClCompile>
+    <ClCompile Include="timmy.cpp">
+      <Filter>Source Files\WEAPONS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\pm_shared\pm_debug.c">
+      <Filter>Source Files\PLAYER_PHYSICS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\pm_shared\pm_math.c">
+      <Filter>Source Files\PLAYER_PHYSICS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\pm_shared\pm_shared.c">
+      <Filter>Source Files\PLAYER_PHYSICS</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="paintballs.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\game_shared\voice_gamemgr.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\pm_shared\pm_debug.h">
+      <Filter>Source Files\PLAYER_PHYSICS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\pm_shared\pm_defs.h">
+      <Filter>Source Files\PLAYER_PHYSICS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\pm_shared\pm_info.h">
+      <Filter>Source Files\PLAYER_PHYSICS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\pm_shared\pm_materials.h">
+      <Filter>Source Files\PLAYER_PHYSICS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\pm_shared\pm_movevars.h">
+      <Filter>Source Files\PLAYER_PHYSICS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\pm_shared\pm_shared.h">
+      <Filter>Source Files\PLAYER_PHYSICS</Filter>
+    </ClInclude>
+    <ClInclude Include="activity.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="activitymap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="animation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="basemonster.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="buy.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cbase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cdll_dll.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="client.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="decals.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="doors.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="effects.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="enginecallback.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="explode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="extdll.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="func_break.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="game.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="monsterevent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="monsters.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nodes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="object.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pbgun.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="plane.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="player.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="random.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rules.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="schedule.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="scriptevent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="soundent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="spectator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="studio_util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="talkmonster.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="trains.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

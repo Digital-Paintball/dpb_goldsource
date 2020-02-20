@@ -1,0 +1,7 @@
+.vs/
+*.ncb
+*.suo
+*.vcxproj.user
+INTERMEDIATE/
+build/
+dlls/Debug
