@@ -677,7 +677,7 @@ void V_CalcNormalRefdef ( struct ref_params_s *pparams )
 	}
 	if(angles[2]!=0.0f) {
 		VectorMA(pparams->vieworg,sin(angles[2]*M_PI/180.0)/sin(LEAN_ANG*M_PI/180.0)*13,pparams->right,pparams->vieworg);
-		pparams->vieworg[2]-=(1-cos(abs(angles[2])*M_PI/180.0))/(1-cos(LEAN_ANG*M_PI/180.0))*4;
+		pparams->vieworg[2]-=(1-cos(fabs(angles[2])*M_PI/180.0))/(1-cos(LEAN_ANG*M_PI/180.0))*4;
 	}
 	lastlean=angles[2];
 	gEngfuncs.pEventAPI->EV_PopPMStates();
