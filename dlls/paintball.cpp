@@ -50,14 +50,17 @@ void PaintBallManager::RemoveBalls(int idx)
 		balls.clear();
 	}
 	else {
-		balls.erase(
-			std::remove_if(
-				balls.begin(), 
-				balls.end(),
-				[idx](pBall_t * pb) { return pb->playerIndex == idx; }
-			),
-			balls.end()
-		);
+		int size = balls.size();
+		std::vector<pBall_t*> copy = balls;
+		balls.clear();
+		for (int i = 0; i < copy.size(); i++) {
+			if (copy[i]->playerIndex == idx) {
+				delete copy[i];
+			}
+			else {
+				balls.push_back(copy[i]);
+			}
+		}
 	}
 }
 
@@ -82,8 +85,6 @@ void PaintBallManager::FirePaintball(float *origin, float *velocity, int owner)
 	VectorCopy(origin, newBall->origin);
 	newBall->threshold = RANDOM_FLOAT(50.0f, 100.0f) * 12.0;
 	balls.push_back(newBall); //add the new ball to the list for processorizing
-
-//	ALERT(at_console, "firing ball from: %f %f %f (new size: %i)\n", origin[0], origin[1], origin[2], paintballs.size());
 }
 
 void PaintBallManager::RunPaintballs()
