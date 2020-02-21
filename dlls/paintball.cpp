@@ -47,6 +47,9 @@ static void VectorCopy (const float *in, float *out)
 void PaintBallManager::RemoveBalls(int idx)
 {
 	if (idx == -1) {
+		for (int i = 0; i < balls.size(); i++) {
+			delete balls[i];
+		}
 		balls.clear();
 	}
 	else {
