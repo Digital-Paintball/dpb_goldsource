@@ -42,57 +42,77 @@ static void VectorCopy (const float *in, float *out)
 	out[1] = in[1];
 	out[2] = in[2];
 }
+
+
 void PaintBallManager::RemoveBalls(int idx)
 {
-	if (idx == -1)
-		paintballs.clear();
-	else
-	{
-		std::list<pBall_t>::iterator iter;
-		for (iter=paintballs.begin();iter!=paintballs.end();iter++)
-		{
-			if ((*iter).playerIndex == idx)
-				iter = paintballs.erase(iter);
+	if (idx == -1) {
+		for (int i = 0; i < balls.size(); i++) {
+			delete balls[i];
+		}
+		balls.clear();
+	}
+	else {
+		int size = balls.size();
+		std::vector<pBall_t*> copy = balls;
+		balls.clear();
+		for (int i = 0; i < copy.size(); i++) {
+			if (copy[i]->playerIndex == idx) {
+				delete copy[i];
+			}
+			else {
+				balls.push_back(copy[i]);
+			}
 		}
 	}
 }
+
+void PaintBallManager::RemoveBall(pBall_t* ball) {
+	balls.erase(
+		std::remove_if(
+			balls.begin(),
+			balls.end(),
+			[ball](pBall_t * pb) { return pb = ball; }
+		),
+		balls.end()
+	);
+	delete ball;
+}
+
+
 void PaintBallManager::FirePaintball(float *origin, float *velocity, int owner)
 {
-	pBall_t newBall;
-	newBall.playerIndex = owner;
-	VectorScale(velocity, 280.0*12.0, newBall.velocity);
-	VectorCopy(origin, newBall.origin);
-	newBall.threshold = RANDOM_FLOAT(50.0f, 100.0f) * 12.0;
-
-	paintballs.push_back(newBall); //add the new ball to the list for processorizing
-
-//	ALERT(at_console, "firing ball from: %f %f %f (new size: %i)\n", origin[0], origin[1], origin[2], paintballs.size());
+	pBall_t* newBall = new pBall_t;
+	newBall->playerIndex = owner;
+	VectorScale(velocity, 280.0*12.0, newBall->velocity);
+	VectorCopy(origin, newBall->origin);
+	newBall->threshold = RANDOM_FLOAT(50.0f, 100.0f) * 12.0;
+	balls.push_back(newBall); //add the new ball to the list for processorizing
 }
 
 void PaintBallManager::RunPaintballs()
 {
-	std::list<pBall_t>::iterator iter;
+	std::vector<pBall_t*>::iterator iter;
+	std::vector<pBall_t*> cleanup;
 
 	float neworigin[3];
 	TraceResult tr;
 
 	edict_t *e;
-	for (iter=paintballs.begin();iter!=paintballs.end();iter++)
+	for (iter = balls.begin(); iter != balls.end(); ++iter)
 	{
-		e=INDEXENT((*iter).playerIndex);
-		if (!e)
-		{
-//			ALERT(at_console, "Ball owner gone..\n");
-			//Kill ball..owner gone.
-			iter = paintballs.erase(iter);
+		pBall_t* pb = *iter;
+		e = INDEXENT(pb->playerIndex);
+		if (!e) {
+			cleanup.push_back(pb);
 			continue;
 		}
 
-		VectorMA((*iter).origin, gpGlobals->frametime, (*iter).velocity, neworigin);
-		TRACE_LINE((*iter).origin, neworigin, 0, e, &tr);
+		VectorMA(pb->origin, gpGlobals->frametime, pb->velocity, neworigin);
+		TRACE_LINE(pb->origin, neworigin, 0, e, &tr);
 		if (tr.flFraction < 1.0f )
 		{
-			if (tr.pHit && Length((*iter).velocity) > (*iter).threshold)
+			if (tr.pHit && Length(pb->velocity) > pb->threshold)
 			{
 				int idx = ENTINDEX(tr.pHit);
 				if (idx > 0 && idx < gpGlobals->maxClients && gRules->CanTakeDamage(tr.pHit,e))
@@ -104,121 +124,20 @@ void PaintBallManager::RunPaintballs()
 						plr->Killed(&(e->v), 0 );
 					}
 				}
-//				ALERT(at_console, "Ball collided..\n");
-				//Kill ball..
-				iter = paintballs.erase(iter);
+				cleanup.push_back(*iter);
 				continue;
 			}
 		}
-		VectorCopy(neworigin,(*iter).origin);
-		(*iter).velocity[2] -= 284.0f * gpGlobals->frametime; // kuja reduced as in client
-		VectorScale((*iter).velocity, 1.0/(1.0+DRAG_COEFF * gpGlobals->frametime * Length((*iter).velocity)), (*iter).velocity);
-//		UTIL_Sparks((*iter).origin); //Tony; testing.
-//		ALERT(at_console, "%f %f %f\n", neworigin[0], neworigin[1], neworigin[2]);
+		VectorCopy(neworigin, pb->origin);
+		pb->velocity[2] -= 284.0f * gpGlobals->frametime; // kuja reduced as in client
+		VectorScale(pb->velocity, 1.0/(1.0+DRAG_COEFF * gpGlobals->frametime * Length(pb->velocity)), pb->velocity);
 	}
-}
-#if 0
-class pbnode
-{
-public:
-	float origin[3];
-	float velocity[3];
-	float threshold;
-	pbnode *next;
-};
-pbnode *pbroot[32];
-pbnode *addball(int slot) 
-{
-	pbnode *ball=new pbnode;
-	if(!ball) {
-		ALERT(at_console,"WARNING: Could not alloc memory for paintball!");
-		return NULL;
-	}
-	ball->next=pbroot[slot];
-	pbroot[slot]=ball;
-	return ball;
-}
 
-void delnextball(pbnode *ball,int slot)
-{
-	pbnode *temp;
-	if(!ball) {
-		temp=pbroot[slot];
-		pbroot[slot]=temp->next;
-		delete temp;
-	} else {
-		temp=ball->next;
-		ball->next=temp->next;
-		delete temp;
+	for (iter = cleanup.begin(); iter != cleanup.end(); ++iter) {
+		RemoveBall(*iter);
 	}
-}
-void RemoveBalls(int owner) 
-{
-	if(!owner) {
-		for(int i=1;i<=gpGlobals->maxClients;i++)
-			RemoveBalls(i);
-	} else {
-		pbnode *cur,*temp;
-		for(cur=pbroot[owner-1];cur;) {
-			temp=cur;
-			cur=cur->next;
-			delete temp;
-		}
-		pbroot[owner-1]=NULL;
-	}
-}
 
-void RunPaintballs()
-{
-	pbnode *prev,*cur;
-	float neworigin[3];
-	TraceResult tr;
-	int i;
-	edict_t *e;
-	for(i=0;i<gpGlobals->maxClients;i++) {
-		e=INDEXENT(i+1);
-		if((!e)||e->free)
-			continue;
-		for(prev=NULL,cur=pbroot[i];cur;prev=cur,cur=cur->next) {
-			VectorMA(cur->origin,gpGlobals->frametime,cur->velocity,neworigin);
-			TRACE_LINE(cur->origin,neworigin,0,e,&tr);
-			if(tr.flFraction!=1.0f) {
-				if(tr.pHit&&Length(cur->velocity)>cur->threshold) {
-					int idx=ENTINDEX(tr.pHit);
-					if(idx>0&&idx<=gpGlobals->maxClients&&gRules->CanTakeDamage(tr.pHit,e)) {
-						CBasePlayer *plr=(CBasePlayer*)CBaseEntity::Instance(tr.pHit);
-						if(plr) {
-							plr->pev->health=0;
-							plr->Killed(&(e->v),0);
-						}
-					}
-				}
-				delnextball(prev,i);
-				if(prev)
-					cur=prev;
-				else
-					cur=pbroot[i];
-				if(cur)
-					continue;
-				break;
-			}	
-			VectorCopy(neworigin,cur->origin);
-			cur->velocity[2]-=284.0f*gpGlobals->frametime; // kuja reduced as in client
-			VectorScale(cur->velocity,1.0/(1.0+DRAG_COEFF*gpGlobals->frametime*Length(cur->velocity)),cur->velocity);
-		}
-	}
 }
-
-void FirePaintball(float *origin,float *velocity,int owner)
-{
-	pbnode *pb=addball(owner-1);
-	if(pb) {
-		VectorScale(velocity,280.0*12.0,pb->velocity);
-		VectorCopy(origin,pb->origin);
-		pb->threshold=RANDOM_FLOAT(50.0f,100.0f)*12.0;
-	}
-}
-#endif
 
 
 void CPod::Spawn()

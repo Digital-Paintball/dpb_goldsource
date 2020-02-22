@@ -1,11 +1,11 @@
 #ifndef PAINTBALL_H
 #define PAINTBALL_H
 
-#include <list>
+#include <vector>
+#include <algorithm>
 
-//Tony; alright, old paintball code is below #ifdef'd out. (har. no it's not!)
-//New struct for paintball; we're only going to have _one_ list!!
-//each ball has playerIndex, to remove em all (however.. i think they're gonna remove automatically anyway..)
+// Previous comment mentioned an #if'd code
+// Paintball tracks who owns it with playerIndex
 typedef struct pBall_s
 {
 	float origin[3];
@@ -17,15 +17,12 @@ typedef struct pBall_s
 class PaintBallManager
 {
 public:
-	PaintBallManager()
-	{
-	}
 	void FirePaintball(float *origin, float *velocity, int owner);
 	void RunPaintballs();
 	void RemoveBalls(int idx);
+	void RemoveBall(pBall_t* ball);
 private:
-	std::list<pBall_t> paintballs;
-
+	std::vector <pBall_t*> balls;
 };
 
 extern PaintBallManager gBallManager;
