@@ -44,8 +44,7 @@ static void VectorCopy (const float *in, float *out)
 }
 
 
-void PaintBallManager::RemoveBalls(int idx)
-{
+void PaintBallManager::RemoveBalls(int idx) {
 	if (idx == -1) {
 		for (int i = 0; i < balls.size(); i++) {
 			delete balls[i];
@@ -68,15 +67,13 @@ void PaintBallManager::RemoveBalls(int idx)
 }
 
 void PaintBallManager::RemoveBall(pBall_t* ball) {
-	balls.erase(
-		std::remove_if(
-			balls.begin(),
-			balls.end(),
-			[ball](pBall_t * pb) { return pb = ball; }
-		),
-		balls.end()
-	);
-	delete ball;
+	for (int i = 0; i < balls.size(); i++) {
+		if (balls[i] == ball) {
+			balls.erase(balls.begin() + i);
+			delete ball;
+			break;
+		}
+	}
 }
 
 
