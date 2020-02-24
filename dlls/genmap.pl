@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-print "{\n\tglobal:\n\t\tGiveFnptrsToDll;\n\t\tGetEntityAPI;\n\t\tGetEntityAPI2;\n\t\tServer_GetBlendingInterface;\n";
+print "VERS_1.1 {\n\tglobal:\n\t\tGiveFnptrsToDll;\n\t\tGetEntityAPI;\n\t\tGetEntityAPI2;\n\t\tServer_GetBlendingInterface;\n";
 while(<STDIN>) {
 	chomp;
 	/\( *(.*),/;

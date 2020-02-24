@@ -7,7 +7,7 @@ pb.dll: ${OFS}
 	${CPP} -shared  -Wl,--kill-at -o pb.dll ${OFS}
 	strip -s pb.dll
 pb_i686.so: ${OFS} pb.map
-	${CPP} -shared -Wl,--version-script=pb.map -o pb_i686.so -static-libgcc -L. ${OFS}
+	${CPP} -shared -Wl,--version-script=pb.map -o pb_i686.so -L. ${OFS}
 	strip -R .sym pb_i686.so
 pb.map:
 	grep LINK_ENTITY_TO_CLASS *.cpp | perl genmap.pl > pb.map
