@@ -1,0 +1,91 @@
+// Digital Paintball Mod FGD by Jonah (68CaliberKiller)
+// ALL maps for DPB MUST have the info_paintball entity somewhere in the map(can be anywhere)
+// I will describe each entity in the following section:
+// info_playerstart_blue: Point Entity
+//	This is a spawn point for a member of the blue team.
+//	DPB does NOT use info_player_start or info_player_deathmatch, so do not put these entities in your map
+// 	MAKE SURE TO INCLUDE 16 SPAWN POINTS PER TEAM!
+//	Let me rephrase the above:
+//	Include 16 spawn points for each team in your map
+//	Note the following:
+//	15 does not equal 16
+//	17 does not equal 16
+//	14 does not equal 16
+//	1  does not equal 16
+// info_playerstart_red: Point Entity
+//	Same as info_playerstart_blue, except is a spawn point for red team
+// item_flag_center: Point Entity
+//	This creates a flag which may be picked up by BOTH teams
+// item_flag_red: Point Entity
+//	This creates a flag for the red team, which may only be picked up by blue
+// item_flag_blue: Point Entity
+//	This creates a flag for the blue team, which may only be picked up by red
+// trigger_teampush: Brush Entity
+//	This is the same as a trigger_push, however, it has 1 field added:
+//	team:
+//		This determines the team that the trigger_teampush will push.
+//		A player who matches this team will be pushed by the entity, and one who is on a different team will be unaffected
+//	This entity can be used to create Team-only walls(walls that both teams may shoot through, but only 1 may pass through):
+//	Create a brush the size of your wall, but 7 units thick.  Turn this into a trigger_teampush, set speed to 500, and the team to whatever you wish
+//	Create another brush parallel to this brush, 7 units thick, and space these brushes 1 unit apart.  Turn this brush into a trigger_teampush, with the same speed and team as previous brush
+//	Set the DIRECTION of push for each trigger_teampush AWAY from each other
+// func_goalpoint: Solid Entity
+//	If a player who has a flag touches this entity, his team wins
+//	team:
+//		The team who may win by touching this entity with flag
+// info_paintball: Point Entity
+//	This Entity MUST be in all DPB maps!
+//	Players Can Respawn(flag):
+//		Determines whether players are allowed to respawn eventually
+//	Infinite Round Time(flag):
+//		If checked, the round Never ends
+//		IF YOU USE THIS, YOU MUST ENABLE PLAYERS TO RESPAWN!!
+//	Allowed Weapons:
+//		Weapons allowed on map, more information when weapon system is complete(does nothing currently)
+//	Respawn Time:
+//		Time(in seconds) that a player must wait to respawn.  If "Players can respawn" is not checked, this does nothing
+//	Round Time Multiplier:
+//		mp_roundtime*this determines the length of rounds(if you have a very small map, make this 0.5, and if you have a huge map, make it 1.5 etc)
+@PointClass studio("models/props/aspar.mdl") = entity_name []
+@PointClass size(-16 -16 -36, 16 16 36) color(0 0 200) = info_playerstart_blue : "Blue Team Spawn Point" []
+@PointClass size(-16 -16 -36, 16 16 36) color(200 0 0) = info_playerstart_red : "Red Team Spawn Point" []
+@PointClass = item_flag_center : "Center flag" []
+@PointClass = item_flag_red : "Red flag"[]
+@PointClass = item_flag_blue : "Blue flag"[]
+@SolidClass base(Trigger, Angles) = trigger_teampush : "Trigger Team Player push"
+[
+	spawnflags(flags) = 
+	[ 
+		1: "Once Only" : 0 
+		2: "Start Off" : 0
+	]
+	speed(integer) : "Speed of push" : 500
+	team(integer) : "Team: 1=red, 2=blue" : 1
+]
+@SolidClass = func_goalpoint : "Flag capture point"
+[
+	team(integer) : "Team: 1=red, 2=blue:" : 1
+]
+@PointClass = info_paintball : "DPB Detect Entity"
+[
+	spawnflags(flags) =
+	[
+		1 : "Allow Respawn" : 0
+		2 : "Infinite Time" : 0
+		4 : "Change teams" : 0
+		8 : "Reset flag ontouch" : 0
+	]
+	weapons(integer) : "Allowed Weapons" : 4294967295
+	frags(integer) : "Respawn Time" : 0
+	message(string) : "Round Time Multiplier" : "1.0"
+]
+@SolidClass base(Targetname, RenderFields) = func_block : "Wall ALLOWS players but BLOCKS paintballs" 
+[
+
+	skin(choices) : "Contents" : -1 =
+	[
+		-1: "Empty"
+		-7: "Volumetric Light"
+	]
+	_minlight(string) : "Minimum light level"
+]
